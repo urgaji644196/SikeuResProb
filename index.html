@@ -355,6 +355,7 @@
     <form id="login-form">
       <h2 id="login-title">Login Admin</h2>
       <p class="subheading">Login hanya untuk admin yang berwenang.</p>
+      <p id="login-notice" class="notice error" role="alert" hidden></p>
       <div class="field"><label for="login-username">Username</label><input id="login-username" autocomplete="username" required></div>
       <div class="field"><label for="login-password">Password</label><input id="login-password" type="password" autocomplete="current-password" required></div>
       <div class="form-actions">
@@ -849,6 +850,7 @@
           showNotice("Supabase belum dikonfigurasi.", true);
           return;
         }
+        document.getElementById("login-notice").hidden = true;
         document.getElementById("login-dialog").showModal();
       });
       document.getElementById("login-cancel").addEventListener("click", () => {
@@ -859,18 +861,22 @@
         const username = document.getElementById("login-username").value.trim();
         const password = document.getElementById("login-password").value;
         const submit = document.getElementById("login-submit");
+        const loginNotice = document.getElementById("login-notice");
         if (username !== ADMIN_USERNAME) {
-          showNotice("Username atau password tidak sesuai.", true);
+          loginNotice.textContent = "Username atau password tidak sesuai.";
+          loginNotice.hidden = false;
           return;
         }
         submit.disabled = true;
+        loginNotice.hidden = true;
         try {
           const { error } = await supabase.auth.signInWithPassword({ email: AUTH_EMAIL, password });
           if (error) throw error;
           document.getElementById("login-password").value = "";
           document.getElementById("login-dialog").close();
         } catch (error) {
-          showNotice(`Login gagal: ${error.message}`, true);
+          loginNotice.textContent = `Login gagal: ${error.message}`;
+          loginNotice.hidden = false;
         } finally {
           submit.disabled = false;
         }

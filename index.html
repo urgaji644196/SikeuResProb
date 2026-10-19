@@ -89,6 +89,12 @@
     .button.secondary:hover { background: #f3f7f5; }
     .button.small { min-height: 32px; padding: 6px 10px; font-size: 12px; }
     .button:disabled { cursor: not-allowed; opacity: .55; }
+    [hidden] { display: none !important; }
+    .auth-actions { display: flex; gap: 8px; margin-left: auto; }
+    dialog { width: min(420px, calc(100% - 28px)); padding: 22px; border: 1px solid var(--line); border-radius: 13px; box-shadow: 0 18px 60px #10211c40; }
+    dialog::backdrop { background: #10211c80; }
+    dialog h2 { margin-bottom: 16px; }
+    dialog .field + .field { margin-top: 13px; }
     .status-pill { display: inline-block; padding: 4px 8px; border-radius: 99px; background: #eef1ef; color: #4c5b55; font-size: 11px; font-weight: 750; }
     .status-pill.lunas { background: #e5f4eb; color: #21623c; }
     .status-pill.kurang { background: #fff3d8; color: #835613; }
@@ -129,16 +135,18 @@
     </header>
 
     <main>
-      <div id="notice" class="notice" role="status" aria-live="polite">
-        Data tersimpan pada browser dan perangkat ini, serta tidak tersinkron otomatis ke perangkat lain.
-      </div>
+      <div id="notice" class="notice" role="status" aria-live="polite">Menghubungkan ke database online…</div>
 
       <nav class="tabs" aria-label="Menu aplikasi">
         <button class="tab-button active" id="tab-dashboard" type="button" data-tab="dashboard" aria-current="page">Dashboard</button>
         <button class="tab-button" id="tab-rekap-gup" type="button" data-tab="rekap-gup">Rekap GUP</button>
-        <button class="tab-button" id="tab-input-gup" type="button" data-tab="input-gup">Input GUP</button>
-        <button class="tab-button" id="tab-rekap-kas" type="button" data-tab="rekap-kas">Rekap Kas GUP</button>
-        <button class="tab-button" id="tab-input-kas" type="button" data-tab="input-kas">Input Kas GUP</button>
+        <button class="tab-button" id="tab-input-gup" type="button" data-tab="input-gup" data-protected hidden>Input GUP</button>
+        <button class="tab-button" id="tab-rekap-kas" type="button" data-tab="rekap-kas" data-protected hidden>Rekap Kas GUP</button>
+        <button class="tab-button" id="tab-input-kas" type="button" data-tab="input-kas" data-protected hidden>Input Kas GUP</button>
+        <div class="auth-actions">
+          <button class="button secondary" id="login-open" type="button">Login Admin</button>
+          <button class="button secondary" id="logout-button" type="button" hidden>Keluar</button>
+        </div>
       </nav>
 
       <section class="tab-panel active" id="dashboard" aria-labelledby="tab-dashboard">
@@ -149,7 +157,7 @@
           </div>
           <div class="form-actions" style="margin-top:0">
             <button class="button secondary" type="button" data-open-tab="rekap-gup">Lihat Rekap GUP</button>
-            <button class="button secondary" type="button" data-open-tab="rekap-kas">Lihat Rekap Kas</button>
+            <button class="button secondary" type="button" data-open-tab="rekap-kas" data-admin-only hidden>Lihat Rekap Kas</button>
           </div>
         </div>
         <div class="card">
@@ -186,7 +194,7 @@
             <h2>Rekap GUP</h2>
             <p class="subheading">Daftar pengajuan GU dan status pembayarannya. Data terbaru ditampilkan di bagian bawah.</p>
           </div>
-          <button class="button" type="button" data-open-tab="input-gup">+ Input GUP</button>
+          <button class="button" type="button" data-open-tab="input-gup" data-admin-only hidden>+ Input GUP</button>
         </div>
         <div class="summary-grid">
           <article class="summary-card"><p class="summary-label">Jumlah pengajuan</p><p class="summary-value" id="gup-count">0</p></article>
@@ -204,7 +212,7 @@
         </div>
       </section>
 
-      <section class="tab-panel" id="input-gup">
+      <section class="tab-panel" id="input-gup" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2 id="gup-form-title">Input GUP</h2>
@@ -262,7 +270,7 @@
         </div>
       </section>
 
-      <section class="tab-panel" id="rekap-kas">
+      <section class="tab-panel" id="rekap-kas" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2>Rekap Kas GUP</h2>
@@ -286,7 +294,7 @@
         </div>
       </section>
 
-      <section class="tab-panel" id="input-kas">
+      <section class="tab-panel" id="input-kas" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2 id="cash-form-title">Input Kas GUP</h2>
@@ -343,11 +351,33 @@
     <footer class="footer">Sikeu Polres Probolinggo · Rekapitulasi Pembayaran GUP</footer>
   </div>
 
-  <script>
+  <dialog id="login-dialog" aria-labelledby="login-title">
+    <form id="login-form">
+      <h2 id="login-title">Login Admin</h2>
+      <p class="subheading">Login hanya untuk admin yang berwenang.</p>
+      <div class="field"><label for="login-username">Username</label><input id="login-username" autocomplete="username" required></div>
+      <div class="field"><label for="login-password">Password</label><input id="login-password" type="password" autocomplete="current-password" required></div>
+      <div class="form-actions">
+        <button class="button" id="login-submit" type="submit">Masuk</button>
+        <button class="button secondary" id="login-cancel" type="button">Batal</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
     (() => {
       "use strict";
 
+      const SUPABASE_URL = "https://GANTI_PROJECT_REF.supabase.co";
+      const SUPABASE_ANON_KEY = "GANTI_DENGAN_SUPABASE_PUBLISHABLE_KEY";
+      const ADMIN_USERNAME = "197610312014121001";
+      const CONFIGURED_ADMIN_UID = "GANTI_DENGAN_UID_ADMIN";
+      const AUTH_EMAIL = `${ADMIN_USERNAME}@${new URL(SUPABASE_URL).hostname}`;
       const STORAGE_KEY = "sikeu-probolinggo-gup-v1";
+      const MIGRATION_KEY = `${STORAGE_KEY}-cloud-migrated`;
+      const COLLECTIONS = ["rekap", "detail", "kas", "talangan"];
       const currency = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
       const calculationFormat = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 6 });
       const money = value => `Rp ${currency.format(Number(value) || 0)}`;
@@ -355,46 +385,296 @@
         ? globalThis.crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const notice = document.getElementById("notice");
-      const state = { rekap: [], detail: [], kas: [], talangan: [] };
-      let storageReady = false;
+      const state = {
+        rekap: [], detail: [], kas: [], talangan: [],
+        publicSummary: { cashCount: 0, cashIn: 0, cashOut: 0, cashBalance: 0, advanceTotal: 0, cashOnHand: 0 }
+      };
+      const supabaseConfigured = SUPABASE_URL.startsWith("https://")
+        && !SUPABASE_URL.includes("GANTI_PROJECT_REF")
+        && SUPABASE_ANON_KEY
+        && !SUPABASE_ANON_KEY.startsWith("GANTI_DENGAN");
+      const supabase = supabaseConfigured
+        ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+      let isAdmin = false;
+      let dataReady = false;
+      let authGeneration = 0;
+      let realtimeChannels = [];
 
       function showNotice(message, isError = false) {
         notice.textContent = message;
         notice.classList.toggle("error", isError);
       }
 
-      function readState() {
+      function readLegacyState() {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved === null) return;
+        if (saved === null) return { rekap: [], detail: [], kas: [], talangan: [] };
         const parsed = JSON.parse(saved);
         if (!parsed || !Array.isArray(parsed.rekap) || !Array.isArray(parsed.detail) || !Array.isArray(parsed.kas)
           || (parsed.talangan !== undefined && !Array.isArray(parsed.talangan))) {
           throw new Error("Format data tersimpan tidak sesuai.");
         }
-        state.rekap = parsed.rekap;
-        state.detail = parsed.detail;
-        state.kas = parsed.kas;
-        state.talangan = parsed.talangan || [];
+        return { rekap: parsed.rekap, detail: parsed.detail, kas: parsed.kas, talangan: parsed.talangan || [] };
       }
 
-      function saveState(next) {
-        if (!storageReady) {
-          showNotice("Penyimpanan lokal tidak tersedia. Data tidak disimpan; aktifkan penyimpanan browser lalu muat ulang aplikasi.", true);
+      function summarize(next) {
+        const cashCount = next.kas.length;
+        const cashIn = next.kas.reduce((sum, item) => sum + (item.jenis === "in" ? Number(item.nominal) || 0 : 0), 0);
+        const cashOut = next.kas.reduce((sum, item) => sum + (item.jenis === "out" ? Number(item.nominal) || 0 : 0), 0);
+        const cashBalance = cashIn - cashOut;
+        const advanceTotal = next.talangan.reduce((sum, item) =>
+          sum + (Number(item.cashIn) || 0) - (Number(item.cashOut) || 0), 0);
+        return { cashCount, cashIn, cashOut, cashBalance, advanceTotal, cashOnHand: cashBalance - advanceTotal };
+      }
+
+      async function persistCloudState(previous, next) {
+        if (!supabase || !isAdmin) throw new Error("Login admin diperlukan untuk menyimpan data.");
+        const changes = [];
+        COLLECTIONS.forEach(name => {
+          const oldRecords = new Map(previous[name].map(record => [record.id, record]));
+          const newRecords = new Map(next[name].map(record => [record.id, record]));
+          newRecords.forEach((record, id) => {
+            if (JSON.stringify(oldRecords.get(id)) !== JSON.stringify(record)) {
+              changes.push({ collection: name, id, record });
+            }
+          });
+          oldRecords.forEach((record, id) => {
+            if (!newRecords.has(id)) changes.push({ collection: name, id, deleted: true });
+          });
+        });
+        for (const name of COLLECTIONS) {
+          const tableChanges = changes.filter(change => change.collection === name);
+          const upserts = tableChanges.filter(change => !change.deleted).map(change => ({
+            id: change.id,
+            data: change.record
+          }));
+          const deletes = tableChanges.filter(change => change.deleted).map(change => change.id);
+          for (let offset = 0; offset < upserts.length; offset += 450) {
+            const result = await supabase.from(name).upsert(upserts.slice(offset, offset + 450));
+            if (result.error) throw result.error;
+          }
+          for (let offset = 0; offset < deletes.length; offset += 450) {
+            const result = await supabase.from(name).delete().in("id", deletes.slice(offset, offset + 450));
+            if (result.error) throw result.error;
+          }
+        }
+        const summaryResult = await supabase.from("dashboard_summary").upsert({
+          id: "public",
+          data: summarize(next),
+          updated_at: new Date().toISOString()
+        });
+        if (summaryResult.error) {
+          throw summaryResult.error;
+        }
+      }
+
+      async function saveState(next) {
+        if (!dataReady || !isAdmin) {
+          showNotice("Login admin diperlukan untuk menyimpan data.", true);
           return false;
         }
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          const previous = {
+            rekap: state.rekap, detail: state.detail, kas: state.kas, talangan: state.talangan
+          };
+          await persistCloudState(previous, next);
         } catch (error) {
-          showNotice(`Data gagal disimpan: ${error.message}`, true);
+          showNotice(`Data gagal disimpan ke Supabase: ${error.message}`, true);
           return false;
         }
         state.rekap = next.rekap;
         state.detail = next.detail;
         state.kas = next.kas;
         state.talangan = next.talangan;
+        state.publicSummary = summarize(next);
         renderAll();
-        showNotice("Data berhasil disimpan pada browser ini.");
+        showNotice("Data berhasil disimpan ke database online.");
         return true;
+      }
+
+      async function loadCollection(name) {
+        const result = await supabase.from(name).select("id, data").order("created_at", { ascending: true });
+        if (result.error) throw result.error;
+        return result.data.map(row => ({ ...row.data, id: row.id }));
+      }
+
+      async function loadPublicData() {
+        const [rekapResult, summaryResult] = await Promise.all([
+          supabase.from("rekap").select("id, data").order("created_at", { ascending: true }),
+          supabase.from("dashboard_summary").select("data").eq("id", "public").maybeSingle()
+        ]);
+        if (rekapResult.error) throw rekapResult.error;
+        if (summaryResult.error) throw summaryResult.error;
+        state.rekap = rekapResult.data.map(row => ({ ...row.data, id: row.id }));
+        state.publicSummary = summaryResult.data
+          ? { ...state.publicSummary, ...summaryResult.data.data }
+          : state.publicSummary;
+        state.detail = [];
+        state.kas = [];
+        state.talangan = [];
+        dataReady = true;
+        renderAll();
+      }
+
+      async function loadAdminData() {
+        const records = await Promise.all(COLLECTIONS.map(loadCollection));
+        COLLECTIONS.forEach((name, index) => { state[name] = records[index]; });
+        state.publicSummary = summarize(state);
+        dataReady = true;
+        renderAll();
+        const summaryResult = await supabase.from("dashboard_summary").upsert({
+          id: "public",
+          data: state.publicSummary,
+          updated_at: new Date().toISOString()
+        });
+        if (summaryResult.error) throw summaryResult.error;
+        await migrateLegacyDataIfNeeded();
+      }
+
+      function stopRealtimeSync() {
+        realtimeChannels.forEach(channel => supabase?.removeChannel(channel));
+        realtimeChannels = [];
+      }
+
+      function startRealtimeSync(generation) {
+        stopRealtimeSync();
+        const names = isAdmin ? COLLECTIONS : ["rekap"];
+        names.forEach(name => {
+          const channel = supabase.channel(`sikeu-${name}-${isAdmin ? "admin" : "public"}`)
+            .on("postgres_changes", { event: "*", schema: "public", table: name }, payload => {
+              if (generation !== authGeneration) return;
+              const recordId = payload.eventType === "DELETE" ? payload.old.id : payload.new.id;
+              const index = state[name].findIndex(item => item.id === recordId);
+              if (payload.eventType === "DELETE") {
+                if (index >= 0) state[name].splice(index, 1);
+              } else {
+                const record = { ...payload.new.data, id: payload.new.id };
+                if (index >= 0) state[name][index] = record;
+                else state[name].push(record);
+                state[name].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+              }
+              if (isAdmin) state.publicSummary = summarize(state);
+              renderAll();
+            })
+            .subscribe((status, error) => {
+              if (generation === authGeneration && status === "CHANNEL_ERROR") {
+                showNotice(`Sinkronisasi ${name} gagal: ${error?.message || "periksa konfigurasi Supabase Realtime."}`, true);
+              }
+            });
+          realtimeChannels.push(channel);
+        });
+        const summaryChannel = supabase.channel(`sikeu-dashboard-${isAdmin ? "admin" : "public"}`)
+          .on("postgres_changes", {
+            event: "*", schema: "public", table: "dashboard_summary", filter: "id=eq.public"
+          }, payload => {
+            if (generation !== authGeneration || isAdmin || payload.eventType === "DELETE") return;
+            state.publicSummary = { ...state.publicSummary, ...payload.new.data };
+            renderDashboard();
+          })
+          .subscribe((status, error) => {
+            if (generation === authGeneration && !isAdmin && status === "CHANNEL_ERROR") {
+              showNotice(`Sinkronisasi dashboard gagal: ${error?.message || "periksa konfigurasi Supabase Realtime."}`, true);
+            }
+          });
+        realtimeChannels.push(summaryChannel);
+      }
+
+      async function migrateLegacyDataIfNeeded() {
+        if (localStorage.getItem(MIGRATION_KEY)) return;
+        const legacy = readLegacyState();
+        const legacyCount = COLLECTIONS.reduce((sum, name) => sum + legacy[name].length, 0);
+        if (!legacyCount) return;
+        const merged = { rekap: [...state.rekap], detail: [...state.detail], kas: [...state.kas], talangan: [...state.talangan] };
+        let added = 0;
+        COLLECTIONS.forEach(name => {
+          const existingIds = new Set(merged[name].map(record => record.id));
+          legacy[name].forEach((record, index) => {
+            const candidate = record.id ? record : { ...record, id: newId() };
+            if (!existingIds.has(candidate.id)) {
+              merged[name].push(candidate);
+              existingIds.add(candidate.id);
+              added++;
+            }
+          });
+        });
+        if (!added || !window.confirm(`Ditemukan ${added} data lama di browser ini. Migrasikan data tersebut ke database online? Data lokal tidak akan dihapus.`)) {
+          return;
+        }
+        if (await saveState(merged)) {
+          localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
+          showNotice(`${added} data lama berhasil dimigrasikan ke database online.`);
+        }
+      }
+
+      function setAccessUi() {
+        document.querySelectorAll(".tab-button[data-protected]").forEach(button => {
+          button.hidden = !isAdmin;
+        });
+        document.querySelectorAll("[data-admin-only]").forEach(element => {
+          element.hidden = !isAdmin;
+        });
+        document.getElementById("login-open").hidden = isAdmin;
+        document.getElementById("logout-button").hidden = !isAdmin;
+        document.querySelectorAll("#gup-form input, #gup-form select, #cash-form input, #cash-form select, #talangan-form input, #talangan-form select, #import-gup, #import-detail").forEach(control => {
+          control.disabled = !isAdmin || !dataReady;
+        });
+        if (!isAdmin && !["dashboard", "rekap-gup"].includes(document.querySelector(".tab-panel.active")?.id)) {
+          openTab("dashboard");
+        }
+      }
+
+      async function handleAuthChange(session) {
+        const generation = ++authGeneration;
+        stopRealtimeSync();
+        const user = session?.user || null;
+        isAdmin = Boolean(user && user.id === CONFIGURED_ADMIN_UID && user.email === AUTH_EMAIL);
+        dataReady = false;
+        setAccessUi();
+        try {
+          if (user && !isAdmin) {
+            await supabase.auth.signOut();
+            showNotice("Akun ini tidak memiliki akses admin.", true);
+            return;
+          }
+          if (isAdmin) {
+            await loadAdminData();
+            if (generation !== authGeneration) return;
+            setAccessUi();
+            document.getElementById("cash-sequence").value = nextKasNumber();
+            document.getElementById("talangan-sequence").value = nextTalanganNumber();
+            startRealtimeSync(generation);
+            showNotice("Login admin berhasil. Data terhubung ke Supabase.");
+          } else {
+            state.detail = [];
+            state.kas = [];
+            state.talangan = [];
+            state.publicSummary = { cashCount: 0, cashIn: 0, cashOut: 0, cashBalance: 0, advanceTotal: 0, cashOnHand: 0 };
+            renderAll();
+            await loadPublicData();
+            if (generation !== authGeneration) return;
+            startRealtimeSync(generation);
+            showNotice("Mode publik: hanya Dashboard dan Rekap GUP yang dapat diakses.");
+          }
+        } catch (error) {
+          dataReady = false;
+          showNotice(`Gagal memuat data dari Supabase: ${error.message}`, true);
+        }
+      }
+
+      function startSupabase() {
+        if (!supabase) {
+          showNotice("Supabase belum dikonfigurasi. Lengkapi URL dan publishable key pada index.html, lalu siapkan tabel serta kebijakan RLS.", true);
+          document.getElementById("login-open").disabled = true;
+          renderAll();
+          return;
+        }
+        if (CONFIGURED_ADMIN_UID.startsWith("GANTI_DENGAN")) {
+          document.getElementById("login-open").disabled = true;
+          showNotice("Supabase siap untuk data publik. Isi UID admin pada index.html dan tabel app_admins untuk mengaktifkan login admin.", true);
+        }
+        supabase.auth.onAuthStateChange((_event, session) => {
+          void handleAuthChange(session);
+        });
       }
 
       function element(tag, text, className) {
@@ -460,10 +740,12 @@
             : Math.abs(Number(item.jumlahBersih) - Number(item.jumlahTerbayar));
           addCell(row, selisih ? money(selisih) : "");
           const actionCell = document.createElement("td");
-          const edit = element("button", "Edit", "button small secondary");
-          edit.type = "button";
-          edit.addEventListener("click", () => editGup(item.id));
-          actionCell.append(edit);
+          if (isAdmin) {
+            const edit = element("button", "Edit", "button small secondary");
+            edit.type = "button";
+            edit.addEventListener("click", () => editGup(item.id));
+            actionCell.append(edit);
+          }
           row.append(actionCell);
           tbody.append(row);
         });
@@ -548,6 +830,10 @@
       }
 
       function openTab(tabId) {
+        if (!isAdmin && !["dashboard", "rekap-gup"].includes(tabId)) {
+          showNotice("Halaman tersebut hanya dapat diakses setelah login admin.", true);
+          return;
+        }
         document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === tabId));
         document.querySelectorAll(".tab-button").forEach(button => {
           const active = button.dataset.tab === tabId;
@@ -558,6 +844,46 @@
 
       document.querySelectorAll(".tab-button").forEach(button => button.addEventListener("click", () => openTab(button.dataset.tab)));
       document.querySelectorAll("[data-open-tab]").forEach(button => button.addEventListener("click", () => openTab(button.dataset.openTab)));
+      document.getElementById("login-open").addEventListener("click", () => {
+        if (!supabase) {
+          showNotice("Supabase belum dikonfigurasi.", true);
+          return;
+        }
+        document.getElementById("login-dialog").showModal();
+      });
+      document.getElementById("login-cancel").addEventListener("click", () => {
+        document.getElementById("login-dialog").close();
+      });
+      document.getElementById("login-form").addEventListener("submit", async event => {
+        event.preventDefault();
+        const username = document.getElementById("login-username").value.trim();
+        const password = document.getElementById("login-password").value;
+        const submit = document.getElementById("login-submit");
+        if (username !== ADMIN_USERNAME) {
+          showNotice("Username atau password tidak sesuai.", true);
+          return;
+        }
+        submit.disabled = true;
+        try {
+          const { error } = await supabase.auth.signInWithPassword({ email: AUTH_EMAIL, password });
+          if (error) throw error;
+          document.getElementById("login-password").value = "";
+          document.getElementById("login-dialog").close();
+        } catch (error) {
+          showNotice(`Login gagal: ${error.message}`, true);
+        } finally {
+          submit.disabled = false;
+        }
+      });
+      document.getElementById("logout-button").addEventListener("click", async () => {
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+          openTab("dashboard");
+        } catch (error) {
+          showNotice(`Gagal keluar dari akun: ${error.message}`, true);
+        }
+      });
 
       function numberFromInput(id) {
         const value = document.getElementById(id).value;
@@ -577,7 +903,7 @@
       }
 
       document.getElementById("gup-cancel").addEventListener("click", resetGupForm);
-      document.getElementById("gup-form").addEventListener("submit", event => {
+      document.getElementById("gup-form").addEventListener("submit", async event => {
         event.preventDefault();
         try {
           const id = document.getElementById("gup-id").value;
@@ -605,7 +931,7 @@
           const next = { ...state, rekap: existing
             ? state.rekap.map(item => item.id === id ? record : item)
             : [...state.rekap, record] };
-          if (saveState(next)) resetGupForm();
+          if (await saveState(next)) resetGupForm();
         } catch (error) {
           showNotice(error.message, true);
         }
@@ -650,7 +976,7 @@
       }
 
       document.getElementById("cash-cancel").addEventListener("click", resetKasForm);
-      document.getElementById("cash-form").addEventListener("submit", event => {
+      document.getElementById("cash-form").addEventListener("submit", async event => {
         event.preventDefault();
         const id = document.getElementById("cash-id").value;
         const existing = state.kas.find(item => item.id === id);
@@ -677,7 +1003,7 @@
           showNotice("Uraian transaksi wajib diisi.", true);
           return;
         }
-        if (saveState(next)) resetKasForm();
+        if (await saveState(next)) resetKasForm();
       });
 
       function editKas(id) {
@@ -710,7 +1036,7 @@
           : "";
       });
 
-      document.getElementById("talangan-form").addEventListener("submit", event => {
+      document.getElementById("talangan-form").addEventListener("submit", async event => {
         event.preventDefault();
         const description = talanganDescription.value.trim();
         const cashInInput = document.getElementById("talangan-in").value;
@@ -737,7 +1063,7 @@
           cashOut,
           tglTransaksi: now
         };
-        if (saveState({ ...state, talangan: [...state.talangan, record] })) {
+        if (await saveState({ ...state, talangan: [...state.talangan, record] })) {
           event.currentTarget.reset();
           document.getElementById("talangan-sequence").value = nextTalanganNumber();
           document.getElementById("talangan-date").value = "";
@@ -895,7 +1221,7 @@
           const records = csvRecords(await file.text());
           if (!records.length) throw new Error("Berkas CSV tidak berisi baris data.");
           const next = { ...state, [target]: [...state[target], ...records] };
-          if (saveState(next)) {
+          if (await saveState(next)) {
             input.value = "";
             showNotice(`${records.length} baris berhasil diimpor ke ${target === "rekap" ? "Rekap GUP" : "Detail GUP"}.`);
           }
@@ -918,16 +1244,7 @@
           else if (status === "LEBIH BAYAR") statusCounts.lebih++;
           else statusCounts.unpaid++;
         });
-        let cashIn = 0;
-        let cashOut = 0;
-        state.kas.forEach(item => {
-          const amount = Number(item.nominal) || 0;
-          if (item.jenis === "in") cashIn += amount;
-          if (item.jenis === "out") cashOut += amount;
-        });
-        const totalTalangan = state.talangan.reduce((balance, item) =>
-          balance + (Number(item.cashIn) || 0) - (Number(item.cashOut) || 0), 0);
-        const saldoKas = cashIn - cashOut;
+        const summary = isAdmin ? summarize(state) : state.publicSummary;
         const values = {
           "dashboard-gup-count": currency.format(state.rekap.length),
           "dashboard-gup-total": money(totalBersih),
@@ -937,12 +1254,12 @@
           "dashboard-status-kurang": currency.format(statusCounts.kurang),
           "dashboard-status-lebih": currency.format(statusCounts.lebih),
           "dashboard-status-unpaid": currency.format(statusCounts.unpaid),
-          "dashboard-cash-count": currency.format(state.kas.length),
-          "dashboard-cash-in": money(cashIn),
-          "dashboard-cash-out": money(cashOut),
-          "dashboard-cash-balance": money(saldoKas),
-          "dashboard-advance-total": money(totalTalangan),
-          "dashboard-cash-on-hand": money(saldoKas - totalTalangan)
+          "dashboard-cash-count": currency.format(summary.cashCount || 0),
+          "dashboard-cash-in": money(summary.cashIn),
+          "dashboard-cash-out": money(summary.cashOut),
+          "dashboard-cash-balance": money(summary.cashBalance),
+          "dashboard-advance-total": money(summary.advanceTotal),
+          "dashboard-cash-on-hand": money(summary.cashOnHand)
         };
         Object.entries(values).forEach(([id, value]) => {
           document.getElementById(id).textContent = value;
@@ -1041,21 +1358,9 @@
         }
       });
 
-      document.querySelectorAll("form input, form select, #import-gup, #import-detail").forEach(control => {
-        control.disabled = true;
-      });
-      try {
-        readState();
-        storageReady = true;
-        document.querySelectorAll("form input, form select, #import-gup, #import-detail").forEach(control => {
-          control.disabled = false;
-        });
-        renderAll();
-        document.getElementById("cash-sequence").value = nextKasNumber();
-        document.getElementById("talangan-sequence").value = nextTalanganNumber();
-      } catch (error) {
-        showNotice(`Data lokal tidak dapat dibaca: ${error.message} Muat ulang atau pulihkan data browser sebelum melanjutkan.`, true);
-      }
+      renderAll();
+      setAccessUi();
+      startSupabase();
     })();
   </script>
 </body>

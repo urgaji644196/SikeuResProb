@@ -712,7 +712,7 @@
         const bersih = Number(item.jumlahBersih);
         const terbayar = Number(item.jumlahTerbayar);
         if (bersih === terbayar) return "LUNAS";
-        return bersih < terbayar ? "KURANG BAYAR" : "LEBIH BAYAR";
+        return terbayar > bersih ? "LEBIH BAYAR" : "KURANG BAYAR";
       }
 
       function gupTotals() {
@@ -744,7 +744,7 @@
           addCell(row, formatDate(item.tglBayar));
           const status = gupStatus(item);
           const statusClass = status === "LUNAS" ? "status-pill lunas" : status === "KURANG BAYAR" ? "status-pill kurang" : status ? "status-pill lebih" : "status-pill";
-          addCell(row, status || "BELUM DIBAYAR", statusClass);
+          addCell(row, status, statusClass);
           const selisih = item.jumlahTerbayar === null || item.jumlahTerbayar === undefined
             ? null
             : Math.abs(Number(item.jumlahBersih) - Number(item.jumlahTerbayar));

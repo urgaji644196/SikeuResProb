@@ -375,7 +375,7 @@
       const SUPABASE_ANON_KEY = "sb_publishable_7dZjZKBPyigeYaNV_ZkvmQ_GwIXVMI-";
       const ADMIN_USERNAME = "197610312014121001";
       const CONFIGURED_ADMIN_UID = "c92d5eca-952a-45c1-805c-06bf3751c3aa";
-      const AUTH_EMAIL = `${197610312014121001}@${iwewjkngajvcqssxeffm.supabase.co}`;
+      const AUTH_EMAIL = `${ADMIN_USERNAME}@${new URL(SUPABASE_URL).hostname}`;
       const STORAGE_KEY = "sikeu-probolinggo-gup-v1";
       const MIGRATION_KEY = `${STORAGE_KEY}-cloud-migrated`;
       const COLLECTIONS = ["rekap", "detail", "kas", "talangan"];
@@ -391,7 +391,7 @@
         publicSummary: { cashCount: 0, cashIn: 0, cashOut: 0, cashBalance: 0, advanceTotal: 0, cashOnHand: 0 }
       };
       const supabaseConfigured = SUPABASE_URL.startsWith("https://")
-        && !SUPABASE_URL.includes("https://iwewjkngajvcqssxeffm.supabase.co")
+        && !SUPABASE_URL.includes("GANTI_PROJECT_REF")
         && SUPABASE_ANON_KEY
         && !SUPABASE_ANON_KEY.startsWith("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZXdqa25nYWp2Y3Fzc3hlZmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTQwMDAsImV4cCI6MjEwNzczMDAwMH0.mSoEpLmvanYcjD-0Nnmn2LPSNT_NHFxpwB_j8hiYq50");
       const supabase = supabaseConfigured

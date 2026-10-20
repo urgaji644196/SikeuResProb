@@ -55,7 +55,7 @@
     h3 { margin: 0 0 13px; font-size: 16px; }
     .subheading { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
     .card { margin-bottom: 17px; padding: 20px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: 0 4px 15px #15382b08; }
-    .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
     .dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
     .summary-card { padding: 17px 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
     .summary-label { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
@@ -200,6 +200,7 @@
           <article class="summary-card"><p class="summary-label">Jumlah pengajuan</p><p class="summary-value" id="gup-count">0</p></article>
           <article class="summary-card"><p class="summary-label">Total jumlah bersih</p><p class="summary-value" id="gup-total">Rp 0</p></article>
           <article class="summary-card"><p class="summary-label">Total sudah terbayar</p><p class="summary-value" id="paid-total">Rp 0</p></article>
+          <article class="summary-card"><p class="summary-label">Belum dibayar</p><p class="summary-value" id="gup-unpaid-total">Rp 0</p></article>
         </div>
         <div class="card">
           <div class="toolbar"><h3>Daftar Rekap GUP</h3><input class="search" id="gup-search" type="search" placeholder="Cari No GU, SubGU, atau subsatker" aria-label="Cari rekap GUP"></div>
@@ -714,16 +715,24 @@
         return bersih < terbayar ? "KURANG BAYAR" : "LEBIH BAYAR";
       }
 
+      function gupTotals() {
+        const totalBersih = state.rekap.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
+        const totalTerbayar = state.rekap.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0);
+        return { totalBersih, totalTerbayar, belumDibayar: totalBersih - totalTerbayar };
+      }
+
       function renderGup() {
         const tbody = document.getElementById("gup-rows");
         const query = document.getElementById("gup-search").value.trim().toLocaleLowerCase("id");
         const filtered = state.rekap.filter(item =>
           [item.noGu, item.noSubgu, item.subsatker].some(value => String(value || "").toLocaleLowerCase("id").includes(query))
         );
+        const totals = gupTotals();
         tbody.replaceChildren();
         document.getElementById("gup-count").textContent = currency.format(state.rekap.length);
-        document.getElementById("gup-total").textContent = money(state.rekap.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0));
-        document.getElementById("paid-total").textContent = money(state.rekap.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0));
+        document.getElementById("gup-total").textContent = money(totals.totalBersih);
+        document.getElementById("paid-total").textContent = money(totals.totalTerbayar);
+        document.getElementById("gup-unpaid-total").textContent = money(totals.belumDibayar);
         if (!filtered.length) {
           emptyRow(tbody, 14, state.rekap.length ? "Tidak ada data yang cocok dengan pencarian." : "Belum ada data GUP.");
           return;
@@ -1237,11 +1246,7 @@
       }
 
       function renderDashboard() {
-        const totalBersih = state.rekap.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
-        const totalTerbayar = state.rekap.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0);
-        const belumDibayar = state.rekap
-          .filter(item => item.jumlahTerbayar === null || item.jumlahTerbayar === undefined || item.jumlahTerbayar === "")
-          .reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
+        const { totalBersih, totalTerbayar, belumDibayar } = gupTotals();
         const statusCounts = { lunas: 0, kurang: 0, lebih: 0, unpaid: 0 };
         state.rekap.forEach(item => {
           const status = gupStatus(item);

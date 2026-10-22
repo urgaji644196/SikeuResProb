@@ -30,9 +30,9 @@
       overflow: hidden; padding: 8px 0; background: var(--gold); color: var(--green-dark);
       font-size: 13px; font-weight: 750;
     }
-    .ticker-track { display: flex; width: max-content; animation: ticker-scroll 18s linear infinite; }
+    .ticker-track { display: flex; width: max-content; animation: ticker-scroll 16s linear infinite; }
     .ticker-group {
-      display: flex; min-width: 100vw; flex: 0 0 auto; align-items: center; justify-content: space-around;
+      display: flex; min-width: 100vw; flex: 0 0 auto; align-items: center; justify-content: flex-end;
     }
     .ticker-group span { padding: 0 24px; white-space: nowrap; }
     .visually-hidden {
@@ -135,11 +135,6 @@
       .panel-heading { flex-direction: column; }
       .calculator { grid-template-columns: 1fr; }
       .brand-image { width: 60px; height: 60px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .ticker-track { width: 100%; justify-content: center; animation: none; }
-      .ticker-group { min-width: 0; }
-      .ticker-group + .ticker-group { display: none; }
     }
   </style>
 </head>

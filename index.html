@@ -28,6 +28,8 @@
     .app-shell { min-height: 100vh; }
     .topbar { padding: 25px max(24px, calc((100vw - 1440px) / 2)); color: #fff; background: var(--green-dark); }
     .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-copy { min-width: 0; }
+    .brand-image { width: 84px; height: 84px; margin-left: auto; flex: 0 0 auto; object-fit: contain; }
     .brand-mark {
       display: grid; width: 48px; height: 48px; place-items: center; flex: 0 0 auto;
       border: 1px solid #ffffff55; border-radius: 15px; color: var(--gold); font-size: 22px; font-weight: 800;
@@ -118,6 +120,7 @@
       .card { padding: 16px; }
       .panel-heading { flex-direction: column; }
       .calculator { grid-template-columns: 1fr; }
+      .brand-image { width: 60px; height: 60px; }
     }
   </style>
 </head>
@@ -126,11 +129,12 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">GUP</div>
-        <div>
+        <div class="brand-copy">
           <p class="eyebrow">Seksi Keuangan · Polres Probolinggo</p>
           <h1>Aplikasi Rekapitulasi Pembayaran GUP</h1>
           <p class="topbar-note">Pencatatan GU, detail SubGU, pembayaran, dan kas</p>
         </div>
+        <img class="brand-image" src="Bed-Sikeu.png" alt="Logo Sikeu">
       </div>
     </header>
 

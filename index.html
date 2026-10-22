@@ -273,7 +273,8 @@
             <div class="field"><label for="gup-csv">Pilih berkas CSV</label><input id="gup-csv" type="file" accept=".csv,text/csv"></div>
             <button class="button secondary" id="import-gup" type="button">Impor Rekap GU</button>
           </div>
-          <p class="help">Kolom CSV: No GU, No SubGU, Nama Subsatker, Jumlah Renbut, PPN, PPH21, PPH22, PPH23, Jumlah Bersih, dan (opsional) Jumlah Terbayar. Baris pertama boleh berupa judul kolom.</p>
+          <p class="help">Kolom CSV: No GU, No SubGU, Nama Subsatker, Jumlah Renbut, PPN, PPH21, PPH22, PPH23, Jumlah Bersih, dan (opsional) Jumlah Terbayar. Baris pertama boleh berupa judul kolom. Pemisah koma, titik koma, atau tab dideteksi otomatis.</p>
+          <p class="notice import-notice" id="gup-import-notice" role="status" aria-live="polite" hidden></p>
         </div>
 
         <div class="card">
@@ -282,7 +283,8 @@
             <div class="field"><label for="detail-csv">Pilih berkas CSV</label><input id="detail-csv" type="file" accept=".csv,text/csv"></div>
             <button class="button secondary" id="import-detail" type="button">Impor Detail GUP</button>
           </div>
-          <p class="help">Kolom CSV sama dengan rekap GU; data akan masuk ke tabel Detail GUP secara terpisah.</p>
+          <p class="help">Kolom CSV sama dengan rekap GU; data akan masuk ke tabel Detail GUP secara terpisah. Pemisah koma, titik koma, atau tab dideteksi otomatis.</p>
+          <p class="notice import-notice" id="detail-import-notice" role="status" aria-live="polite" hidden></p>
         </div>
 
         <div class="card">
@@ -1252,9 +1254,17 @@
 
       async function importCsv(inputId, target) {
         const input = document.getElementById(inputId);
+        const feedback = document.getElementById(target === "rekap" ? "gup-import-notice" : "detail-import-notice");
+        const showImportFeedback = (message, isError = false) => {
+          feedback.textContent = message;
+          feedback.classList.toggle("error", isError);
+          feedback.hidden = false;
+        };
         const file = input.files && input.files[0];
         if (!file) {
-          showNotice("Pilih berkas CSV terlebih dahulu.", true);
+          const message = "Pilih berkas CSV terlebih dahulu.";
+          showNotice(message, true);
+          showImportFeedback(message, true);
           return;
         }
         try {
@@ -1263,10 +1273,16 @@
           const next = { ...state, [target]: [...state[target], ...records] };
           if (await saveState(next)) {
             input.value = "";
-            showNotice(`${records.length} baris berhasil diimpor ke ${target === "rekap" ? "Rekap GUP" : "Detail GUP"}.`);
+            const message = `${records.length} baris berhasil diimpor ke ${target === "rekap" ? "Rekap GUP" : "Detail GUP"}.`;
+            showNotice(message);
+            showImportFeedback(message);
+          } else {
+            showImportFeedback(notice.textContent, true);
           }
         } catch (error) {
-          showNotice(`Impor CSV gagal: ${error.message}`, true);
+          const message = `Impor CSV gagal: ${error.message}`;
+          showNotice(message, true);
+          showImportFeedback(message, true);
         }
       }
 

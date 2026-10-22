@@ -26,6 +26,20 @@
     button, input, select { font: inherit; }
     button { cursor: pointer; }
     .app-shell { min-height: 100vh; }
+    .ticker {
+      overflow: hidden; padding: 8px 0; background: var(--gold); color: var(--green-dark);
+      font-size: 13px; font-weight: 750;
+    }
+    .ticker-track { display: flex; width: max-content; animation: ticker-scroll 18s linear infinite; }
+    .ticker-group {
+      display: flex; min-width: 100vw; flex: 0 0 auto; align-items: center; justify-content: space-around;
+    }
+    .ticker-group span { padding: 0 24px; white-space: nowrap; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    @keyframes ticker-scroll { to { transform: translateX(-50%); } }
     .topbar { padding: 25px max(24px, calc((100vw - 1440px) / 2)); color: #fff; background: var(--green-dark); }
     .brand { display: flex; align-items: center; gap: 15px; }
     .brand-copy { min-width: 0; }
@@ -122,10 +136,22 @@
       .calculator { grid-template-columns: 1fr; }
       .brand-image { width: 60px; height: 60px; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .ticker-track { width: 100%; justify-content: center; animation: none; }
+      .ticker-group { min-width: 0; }
+      .ticker-group + .ticker-group { display: none; }
+    }
   </style>
 </head>
 <body>
-    <div class="app-shell">
+  <div class="ticker" role="region" aria-label="Semboyan">
+    <span class="visually-hidden">Polisi Bersama Masyarakat</span>
+    <div class="ticker-track" aria-hidden="true">
+      <div class="ticker-group"><span>Polisi Bersama Masyarakat</span></div>
+      <div class="ticker-group"><span>Polisi Bersama Masyarakat</span></div>
+    </div>
+  </div>
+  <div class="app-shell">
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">GUP</div>
@@ -1378,6 +1404,5 @@
       startSupabase();
     })();
   </script>
-  <marquee class="blink">" Polisi Bersama Masyarakat..."</marquee>
 </body>
 </html>

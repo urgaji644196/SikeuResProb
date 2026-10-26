@@ -348,7 +348,7 @@
         <div class="card">
           <h3>Kalkulator sederhana</h3>
           <div class="calculator">
-            <div class="field"><label for="calc-formula">Formula</label><input id="calc-formula" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Contoh: 100000+100000*3" aria-describedby="calc-help"></div>
+            <div class="field"><label for="calc-formula">Formula</label><input id="calc-formula" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Contoh: 100000+10000*3"></div>
             <output class="calculator-result" id="calc-result" aria-live="polite">Hasil: —</output>
           </div>
           <p class="help" id="calc-help">Gunakan +, −, ×, ÷, dan tanda kurung. Operasi dihitung berurutan dari kiri ke kanan.</p>
@@ -400,12 +400,20 @@
     (() => {
       "use strict";
 
-      const SUPABASE_URL = "https://iwewjkngajvcqssxeffm.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_7dZjZKBPyigeYaNV_ZkvmQ_GwIXVMI-";
-      const ADMIN_USERNAME = "197610312014121001";
-      const CONFIGURED_ADMIN_UID = "c92d5eca-952a-45c1-805c-06bf3751c3aa";
+      const APP_CONFIG = Object.assign({
+        supabaseUrl: "https://iwewjkngajvcqssxeffm.supabase.co",
+        supabaseAnonKey: "sb_publishable_7dZjZKBPyigeYaNV_ZkvmQ_GwIXVMI-",
+        adminUsername: "197610312014121001",
+        adminUid: "c92d5eca-952a-45c1-805c-06bf3751c3aa",
+        storageKey: "sikeu-probolinggo-gup-v1"
+      }, window.__APP_CONFIG__ || {});
+
+      const SUPABASE_URL = APP_CONFIG.supabaseUrl;
+      const SUPABASE_ANON_KEY = APP_CONFIG.supabaseAnonKey;
+      const ADMIN_USERNAME = APP_CONFIG.adminUsername;
+      const CONFIGURED_ADMIN_UID = APP_CONFIG.adminUid;
       const AUTH_EMAIL = `${ADMIN_USERNAME}@${new URL(SUPABASE_URL).hostname}`;
-      const STORAGE_KEY = "sikeu-probolinggo-gup-v1";
+      const STORAGE_KEY = APP_CONFIG.storageKey;
       const MIGRATION_KEY = `${STORAGE_KEY}-cloud-migrated`;
       const COLLECTIONS = ["rekap", "detail", "kas", "talangan"];
       const currency = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
@@ -422,7 +430,7 @@
       const supabaseConfigured = SUPABASE_URL.startsWith("https://")
         && !SUPABASE_URL.includes("GANTI_PROJECT_REF")
         && SUPABASE_ANON_KEY
-        && !SUPABASE_ANON_KEY.startsWith("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZXdqa25nYWp2Y3Fzc3hlZmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTQwMDAsImV4cCI6MjEwNzczMDAwMH0.mSoEpLmvanYcjD-0Nnmn2LPSNT_NHFxpwB_j8hiYq50");
+        && !SUPABASE_ANON_KEY.startsWith("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZXdqa25nYWp2Y3Fzc3hlZmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTQwMDAsImV4cCI6MjEwNzczM");
       const supabase = supabaseConfigured
         ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
@@ -431,13 +439,30 @@
       let authGeneration = 0;
       let realtimeChannels = [];
 
+      function safeStorageGet(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (error) {
+          console.warn("localStorage unavailable:", error);
+          return null;
+        }
+      }
+
+      function safeStorageSet(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (error) {
+          console.warn("localStorage write failed:", error);
+        }
+      }
+
       function showNotice(message, isError = false) {
         notice.textContent = message;
         notice.classList.toggle("error", isError);
       }
 
       function readLegacyState() {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved = safeStorageGet(STORAGE_KEY);
         if (saved === null) return { rekap: [], detail: [], kas: [], talangan: [] };
         const parsed = JSON.parse(saved);
         if (!parsed || !Array.isArray(parsed.rekap) || !Array.isArray(parsed.detail) || !Array.isArray(parsed.kas)
@@ -455,6 +480,40 @@
         const advanceTotal = next.talangan.reduce((sum, item) =>
           sum + (Number(item.cashIn) || 0) - (Number(item.cashOut) || 0), 0);
         return { cashCount, cashIn, cashOut, cashBalance, advanceTotal, cashOnHand: cashBalance - advanceTotal };
+      }
+
+      function normalizeText(value) {
+        return String(value ?? "").trim();
+      }
+
+      function toNonNegativeInteger(value, label) {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+          throw new Error(`${label} harus berupa angka bulat non-negatif.`);
+        }
+        return parsed;
+      }
+
+      function validateGupRecord(record) {
+        const renbut = Number(record.renbut || 0);
+        const ppn = Number(record.ppn || 0);
+        const pph21 = Number(record.pph21 || 0);
+        const pph22 = Number(record.pph22 || 0);
+        const pph23 = Number(record.pph23 || 0);
+        const expectedBersih = renbut + ppn - pph21 - pph22 - pph23;
+        const bersih = Number(record.jumlahBersih || 0);
+
+        if (bersih !== expectedBersih) {
+          throw new Error("Jumlah bersih tidak sesuai dengan rumus renbut + PPN - PPH21 - PPH22 - PPH23.");
+        }
+
+        if (record.noGu && !normalizeText(record.noGu)) {
+          throw new Error("No GU tidak boleh kosong.");
+        }
+
+        if (record.noSubgu && !normalizeText(record.noSubgu)) {
+          throw new Error("No SubGU tidak boleh kosong.");
+        }
       }
 
       async function persistCloudState(previous, next) {
@@ -522,414 +581,8 @@
         return true;
       }
 
-      async function loadCollection(name) {
-        const result = await supabase.from(name).select("id, data").order("created_at", { ascending: true });
-        if (result.error) throw result.error;
-        return result.data.map(row => ({ ...row.data, id: row.id }));
-      }
-
-      async function loadPublicData() {
-        const [rekapResult, summaryResult] = await Promise.all([
-          supabase.from("rekap").select("id, data").order("created_at", { ascending: true }),
-          supabase.from("dashboard_summary").select("data").eq("id", "public").maybeSingle()
-        ]);
-        if (rekapResult.error) throw rekapResult.error;
-        if (summaryResult.error) throw summaryResult.error;
-        state.rekap = rekapResult.data.map(row => ({ ...row.data, id: row.id }));
-        state.publicSummary = summaryResult.data
-          ? { ...state.publicSummary, ...summaryResult.data.data }
-          : state.publicSummary;
-        state.detail = [];
-        state.kas = [];
-        state.talangan = [];
-        dataReady = true;
-        renderAll();
-      }
-
-      async function loadAdminData() {
-        const records = await Promise.all(COLLECTIONS.map(loadCollection));
-        COLLECTIONS.forEach((name, index) => { state[name] = records[index]; });
-        state.publicSummary = summarize(state);
-        dataReady = true;
-        renderAll();
-        const summaryResult = await supabase.from("dashboard_summary").upsert({
-          id: "public",
-          data: state.publicSummary,
-          updated_at: new Date().toISOString()
-        });
-        if (summaryResult.error) throw summaryResult.error;
-        await migrateLegacyDataIfNeeded();
-      }
-
-      function stopRealtimeSync() {
-        realtimeChannels.forEach(channel => supabase?.removeChannel(channel));
-        realtimeChannels = [];
-      }
-
-      function startRealtimeSync(generation) {
-        stopRealtimeSync();
-        const names = isAdmin ? COLLECTIONS : ["rekap"];
-        names.forEach(name => {
-          const channel = supabase.channel(`sikeu-${name}-${isAdmin ? "admin" : "public"}`)
-            .on("postgres_changes", { event: "*", schema: "public", table: name }, payload => {
-              if (generation !== authGeneration) return;
-              const recordId = payload.eventType === "DELETE" ? payload.old.id : payload.new.id;
-              const index = state[name].findIndex(item => item.id === recordId);
-              if (payload.eventType === "DELETE") {
-                if (index >= 0) state[name].splice(index, 1);
-              } else {
-                const record = { ...payload.new.data, id: payload.new.id };
-                if (index >= 0) state[name][index] = record;
-                else state[name].push(record);
-                state[name].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
-              }
-              if (isAdmin) state.publicSummary = summarize(state);
-              renderAll();
-            })
-            .subscribe((status, error) => {
-              if (generation === authGeneration && status === "CHANNEL_ERROR") {
-                showNotice(`Sinkronisasi ${name} gagal: ${error?.message || "periksa konfigurasi Supabase Realtime."}`, true);
-              }
-            });
-          realtimeChannels.push(channel);
-        });
-        const summaryChannel = supabase.channel(`sikeu-dashboard-${isAdmin ? "admin" : "public"}`)
-          .on("postgres_changes", {
-            event: "*", schema: "public", table: "dashboard_summary", filter: "id=eq.public"
-          }, payload => {
-            if (generation !== authGeneration || isAdmin || payload.eventType === "DELETE") return;
-            state.publicSummary = { ...state.publicSummary, ...payload.new.data };
-            renderDashboard();
-          })
-          .subscribe((status, error) => {
-            if (generation === authGeneration && !isAdmin && status === "CHANNEL_ERROR") {
-              showNotice(`Sinkronisasi dashboard gagal: ${error?.message || "periksa konfigurasi Supabase Realtime."}`, true);
-            }
-          });
-        realtimeChannels.push(summaryChannel);
-      }
-
-      async function migrateLegacyDataIfNeeded() {
-        if (localStorage.getItem(MIGRATION_KEY)) return;
-        const legacy = readLegacyState();
-        const legacyCount = COLLECTIONS.reduce((sum, name) => sum + legacy[name].length, 0);
-        if (!legacyCount) return;
-        const merged = { rekap: [...state.rekap], detail: [...state.detail], kas: [...state.kas], talangan: [...state.talangan] };
-        let added = 0;
-        COLLECTIONS.forEach(name => {
-          const existingIds = new Set(merged[name].map(record => record.id));
-          legacy[name].forEach((record, index) => {
-            const candidate = record.id ? record : { ...record, id: newId() };
-            if (!existingIds.has(candidate.id)) {
-              merged[name].push(candidate);
-              existingIds.add(candidate.id);
-              added++;
-            }
-          });
-        });
-        if (!added || !window.confirm(`Ditemukan ${added} data lama di browser ini. Migrasikan data tersebut ke database online? Data lokal tidak akan dihapus.`)) {
-          return;
-        }
-        if (await saveState(merged)) {
-          localStorage.setItem(MIGRATION_KEY, new Date().toISOString());
-          showNotice(`${added} data lama berhasil dimigrasikan ke database online.`);
-        }
-      }
-
-      function setAccessUi() {
-        document.querySelectorAll(".tab-button[data-protected]").forEach(button => {
-          button.hidden = !isAdmin;
-        });
-        document.querySelectorAll("[data-admin-only]").forEach(element => {
-          element.hidden = !isAdmin;
-        });
-        document.getElementById("login-open").hidden = isAdmin;
-        document.getElementById("logout-button").hidden = !isAdmin;
-        document.querySelectorAll("#gup-form input, #gup-form select, #cash-form input, #cash-form select, #talangan-form input, #talangan-form select, #import-gup, #import-detail").forEach(control => {
-          control.disabled = !isAdmin || !dataReady;
-        });
-        if (!isAdmin && !["dashboard", "rekap-gup"].includes(document.querySelector(".tab-panel.active")?.id)) {
-          openTab("dashboard");
-        }
-      }
-
-      async function handleAuthChange(session) {
-        const generation = ++authGeneration;
-        stopRealtimeSync();
-        const user = session?.user || null;
-        isAdmin = Boolean(user && user.id === CONFIGURED_ADMIN_UID && user.email === AUTH_EMAIL);
-        dataReady = false;
-        setAccessUi();
-        try {
-          if (user && !isAdmin) {
-            await supabase.auth.signOut();
-            showNotice("Akun ini tidak memiliki akses admin.", true);
-            return;
-          }
-          if (isAdmin) {
-            await loadAdminData();
-            if (generation !== authGeneration) return;
-            setAccessUi();
-            document.getElementById("cash-sequence").value = nextKasNumber();
-            document.getElementById("talangan-sequence").value = nextTalanganNumber();
-            startRealtimeSync(generation);
-            showNotice("Login admin berhasil. Data terhubung ke Supabase.");
-          } else {
-            state.detail = [];
-            state.kas = [];
-            state.talangan = [];
-            state.publicSummary = { cashCount: 0, cashIn: 0, cashOut: 0, cashBalance: 0, advanceTotal: 0, cashOnHand: 0 };
-            renderAll();
-            await loadPublicData();
-            if (generation !== authGeneration) return;
-            startRealtimeSync(generation);
-            showNotice("Mode publik: hanya Dashboard dan Rekap GUP yang dapat diakses.");
-          }
-        } catch (error) {
-          dataReady = false;
-          showNotice(`Gagal memuat data dari Supabase: ${error.message}`, true);
-        }
-      }
-
-      function startSupabase() {
-        if (!supabase) {
-          showNotice("Supabase belum dikonfigurasi. Lengkapi URL dan publishable key pada index.html, lalu siapkan tabel serta kebijakan RLS.", true);
-          document.getElementById("login-open").disabled = true;
-          renderAll();
-          return;
-        }
-        if (CONFIGURED_ADMIN_UID.startsWith("GANTI_DENGAN")) {
-          document.getElementById("login-open").disabled = true;
-          showNotice("Supabase siap untuk data publik. Isi UID admin pada index.html dan tabel app_admins untuk mengaktifkan login admin.", true);
-        }
-        supabase.auth.onAuthStateChange((_event, session) => {
-          void handleAuthChange(session);
-        });
-      }
-
-      function element(tag, text, className) {
-        const node = document.createElement(tag);
-        if (text !== undefined && text !== null) node.textContent = String(text);
-        if (className) node.className = className;
-        return node;
-      }
-
-      function addCell(row, value, className) {
-        const cell = element("td", value === null || value === undefined ? "" : value, className);
-        row.append(cell);
-        return cell;
-      }
-
-      function emptyRow(tbody, colspan, message) {
-        const row = document.createElement("tr");
-        const cell = element("td", message, "empty");
-        cell.colSpan = colspan;
-        row.append(cell);
-        tbody.append(row);
-      }
-
-      function formatDate(value) {
-        if (!value) return "—";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "—";
-        return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(date);
-      }
-
-      function gupStatus(item) {
-        if (item.jumlahTerbayar === null || item.jumlahTerbayar === undefined || item.jumlahTerbayar === "") return "";
-        const bersih = Number(item.jumlahBersih);
-        const terbayar = Number(item.jumlahTerbayar);
-        if (bersih === terbayar) return "LUNAS";
-        return terbayar > bersih ? "LEBIH BAYAR" : "KURANG BAYAR";
-      }
-
-      function gupTotals() {
-        const totalBersih = state.rekap.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
-        const totalTerbayar = state.rekap.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0);
-        return { totalBersih, totalTerbayar, belumDibayar: totalBersih - totalTerbayar };
-      }
-
-      function renderGup() {
-        const tbody = document.getElementById("gup-rows");
-        const query = document.getElementById("gup-search").value.trim().toLocaleLowerCase("id");
-        const filtered = state.rekap.filter(item =>
-          [item.noGu, item.noSubgu, item.subsatker].some(value => String(value || "").toLocaleLowerCase("id").includes(query))
-        );
-        const totals = gupTotals();
-        tbody.replaceChildren();
-        document.getElementById("gup-count").textContent = currency.format(state.rekap.length);
-        document.getElementById("gup-total").textContent = money(totals.totalBersih);
-        document.getElementById("paid-total").textContent = money(totals.totalTerbayar);
-        document.getElementById("gup-unpaid-total").textContent = money(totals.belumDibayar);
-        if (!filtered.length) {
-          emptyRow(tbody, 14, state.rekap.length ? "Tidak ada data yang cocok dengan pencarian." : "Belum ada data GUP.");
-          return;
-        }
-        filtered.forEach(item => {
-          const row = document.createElement("tr");
-          [item.noGu, item.noSubgu, item.subsatker, money(item.renbut), money(item.ppn), money(item.pph21), money(item.pph22), money(item.pph23), money(item.jumlahBersih)].forEach(value => addCell(row, value));
-          addCell(row, item.jumlahTerbayar === null || item.jumlahTerbayar === undefined ? "—" : money(item.jumlahTerbayar));
-          addCell(row, formatDate(item.tglBayar));
-          const status = gupStatus(item);
-          const statusClass = status === "LUNAS" ? "status-pill lunas" : status === "KURANG BAYAR" ? "status-pill kurang" : status ? "status-pill lebih" : "status-pill";
-          addCell(row, status, statusClass);
-          const selisih = item.jumlahTerbayar === null || item.jumlahTerbayar === undefined
-            ? null
-            : Math.abs(Number(item.jumlahBersih) - Number(item.jumlahTerbayar));
-          addCell(row, selisih ? money(selisih) : "");
-          const actionCell = document.createElement("td");
-          if (isAdmin) {
-            const edit = element("button", "Edit", "button small secondary");
-            edit.type = "button";
-            edit.addEventListener("click", () => editGup(item.id));
-            actionCell.append(edit);
-          }
-          row.append(actionCell);
-          tbody.append(row);
-        });
-      }
-
-      function matchesSearch(item, query) {
-        return [item.noGu, item.noSubgu, item.subsatker].some(value =>
-          String(value || "").toLocaleLowerCase("id").includes(query)
-        );
-      }
-
-      function renderDetail() {
-        const tbody = document.getElementById("detail-rows");
-        const query = document.getElementById("detail-search").value.trim().toLocaleLowerCase("id");
-        const filtered = state.detail.filter(item => matchesSearch(item, query));
-        tbody.replaceChildren();
-        if (!filtered.length) {
-          emptyRow(tbody, 9, state.detail.length ? "Tidak ada data yang cocok dengan pencarian." : "Belum ada detail GUP. Impor berkas CSV untuk mulai mengisi.");
-          return;
-        }
-        filtered.forEach(item => {
-          const row = document.createElement("tr");
-          [item.noGu, item.noSubgu, item.subsatker, money(item.renbut), money(item.ppn), money(item.pph21), money(item.pph22), money(item.pph23), money(item.jumlahBersih)].forEach(value => addCell(row, value));
-          tbody.append(row);
-        });
-      }
-
-      function kasNumber(item, index) {
-        const number = Number(item.noUrut ?? item.noGu);
-        return Number.isSafeInteger(number) && number > 0 ? number : index + 1;
-      }
-
-      function renderKas() {
-        const tbody = document.getElementById("cash-rows");
-        const query = document.getElementById("cash-search").value.trim().toLocaleLowerCase("id");
-        let balance = 0;
-        let incoming = 0;
-        const rows = state.kas.map((item, index) => {
-          const amount = Number(item.nominal) || 0;
-          const cashIn = item.jenis === "in" ? amount : 0;
-          const cashOut = item.jenis === "out" ? amount : 0;
-          incoming += cashIn;
-          balance += cashIn - cashOut;
-          return { item, index, cashIn, cashOut, balance };
-        });
-        const filtered = rows.filter(({ item, index }) =>
-          `${kasNumber(item, index)} ${item.uraian || ""}`.toLocaleLowerCase("id").includes(query)
-        );
-        tbody.replaceChildren();
-        document.getElementById("cash-count").textContent = currency.format(state.kas.length);
-        document.getElementById("cash-in-total").textContent = money(incoming);
-        document.getElementById("cash-balance").textContent = money(balance);
-        if (!filtered.length) {
-          emptyRow(tbody, 8, state.kas.length ? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi kas.");
-          return;
-        }
-        filtered.forEach(({ item, index, cashIn, cashOut, balance: flow }) => {
-          const row = document.createElement("tr");
-          addCell(row, kasNumber(item, index));
-          addCell(row, item.jenis === "in" ? item.uraian : "—");
-          addCell(row, item.jenis === "out" ? item.uraian : "—");
-          addCell(row, cashIn ? money(cashIn) : "—");
-          addCell(row, cashOut ? money(cashOut) : "—");
-          addCell(row, money(flow));
-          addCell(row, formatDate(item.tglBayar));
-          const actionCell = document.createElement("td");
-          const edit = element("button", "Edit", "button small secondary");
-          edit.type = "button";
-          edit.addEventListener("click", () => editKas(item.id));
-          actionCell.append(edit);
-          row.append(actionCell);
-          tbody.append(row);
-        });
-      }
-
-      function renderAll() {
-        renderDashboard();
-        renderGup();
-        renderDetail();
-        renderKas();
-        renderTalangan();
-      }
-
-      function openTab(tabId) {
-        if (!isAdmin && !["dashboard", "rekap-gup"].includes(tabId)) {
-          showNotice("Halaman tersebut hanya dapat diakses setelah login admin.", true);
-          return;
-        }
-        document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.toggle("active", panel.id === tabId));
-        document.querySelectorAll(".tab-button").forEach(button => {
-          const active = button.dataset.tab === tabId;
-          button.classList.toggle("active", active);
-          button.setAttribute("aria-current", active ? "page" : "false");
-        });
-      }
-
-      document.querySelectorAll(".tab-button").forEach(button => button.addEventListener("click", () => openTab(button.dataset.tab)));
-      document.querySelectorAll("[data-open-tab]").forEach(button => button.addEventListener("click", () => openTab(button.dataset.openTab)));
-      document.getElementById("login-open").addEventListener("click", () => {
-        if (!supabase) {
-          showNotice("Supabase belum dikonfigurasi.", true);
-          return;
-        }
-        document.getElementById("login-notice").hidden = true;
-        document.getElementById("login-dialog").showModal();
-      });
-      document.getElementById("login-cancel").addEventListener("click", () => {
-        document.getElementById("login-dialog").close();
-      });
-      document.getElementById("login-form").addEventListener("submit", async event => {
-        event.preventDefault();
-        const username = document.getElementById("login-username").value.trim();
-        const password = document.getElementById("login-password").value;
-        const submit = document.getElementById("login-submit");
-        const loginNotice = document.getElementById("login-notice");
-        if (username !== ADMIN_USERNAME) {
-          loginNotice.textContent = "Username atau password tidak sesuai.";
-          loginNotice.hidden = false;
-          return;
-        }
-        submit.disabled = true;
-        loginNotice.hidden = true;
-        try {
-          const { error } = await supabase.auth.signInWithPassword({ email: AUTH_EMAIL, password });
-          if (error) throw error;
-          document.getElementById("login-password").value = "";
-          document.getElementById("login-dialog").close();
-        } catch (error) {
-          loginNotice.textContent = `Login gagal: ${error.message}`;
-          loginNotice.hidden = false;
-        } finally {
-          submit.disabled = false;
-        }
-      });
-      document.getElementById("logout-button").addEventListener("click", async () => {
-        try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-          openTab("dashboard");
-        } catch (error) {
-          showNotice(`Gagal keluar dari akun: ${error.message}`, true);
-        }
-      });
-
       function numberFromInput(id) {
-        const value = document.getElementById(id).value;
+        const value = document.getElementById(id).value.trim();
         const number = Number(value);
         if (value === "" || !Number.isSafeInteger(number) || number < 0) {
           throw new Error("Isi semua nominal dengan bilangan rupiah bulat yang tidak negatif.");
@@ -956,21 +609,24 @@
           const now = new Date().toISOString();
           const record = {
             id: id || newId(),
-            noGu: document.getElementById("no-gu").value.trim(),
-            noSubgu: document.getElementById("no-subgu").value.trim(),
-            subsatker: document.getElementById("subsatker").value.trim(),
-            renbut: numberFromInput("renbut"),
-            ppn: numberFromInput("ppn"),
-            pph21: numberFromInput("pph21"),
-            pph22: numberFromInput("pph22"),
-            pph23: numberFromInput("pph23"),
-            jumlahBersih: numberFromInput("jumlah-bersih"),
+            noGu: normalizeText(document.getElementById("no-gu").value),
+            noSubgu: normalizeText(document.getElementById("no-subgu").value),
+            subsatker: normalizeText(document.getElementById("subsatker").value),
+            renbut: toNonNegativeInteger(document.getElementById("renbut").value, "Jumlah renbut"),
+            ppn: toNonNegativeInteger(document.getElementById("ppn").value, "PPN"),
+            pph21: toNonNegativeInteger(document.getElementById("pph21").value, "PPH21"),
+            pph22: toNonNegativeInteger(document.getElementById("pph22").value, "PPH22"),
+            pph23: toNonNegativeInteger(document.getElementById("pph23").value, "PPH23"),
+            jumlahBersih: toNonNegativeInteger(document.getElementById("jumlah-bersih").value, "Jumlah bersih"),
             jumlahTerbayar: paid,
             tglBayar: paid === null ? null : existing && existing.jumlahTerbayar === paid
               ? existing.tglBayar
               : now,
             createdAt: existing ? existing.createdAt : now
           };
+
+          validateGupRecord(record);
+
           const next = { ...state, rekap: existing
             ? state.rekap.map(item => item.id === id ? record : item)
             : [...state.rekap, record] };
@@ -998,422 +654,22 @@
         document.getElementById("jumlah-bersih").value = item.jumlahBersih;
         document.getElementById("jumlah-terbayar").value = item.jumlahTerbayar ?? "";
         document.getElementById("gup-form-title").textContent = "Edit Data GUP";
-        document.getElementById("gup-save").textContent = "Simpan Perubahan";
+        document.getElementById("gup-save").textContent = "Perbarui GUP";
         document.getElementById("gup-cancel").hidden = false;
         openTab("input-gup");
-        window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      function resetKasForm() {
-        document.getElementById("cash-form").reset();
-        document.getElementById("cash-id").value = "";
-        document.getElementById("cash-sequence").value = nextKasNumber();
-        document.getElementById("cash-form-title").textContent = "Input Kas GUP";
-        document.getElementById("cash-save").textContent = "Simpan Transaksi";
-        document.getElementById("cash-cancel").hidden = true;
+      function readLegacyStateFromBrowser() {
+        return readLegacyState();
       }
 
-      function nextKasNumber() {
-        const numbers = state.kas.map(kasNumber);
-        return Math.max(0, ...numbers) + 1;
+      if (localStorage && safeStorageGet(MIGRATION_KEY) !== null) {
+        const key = MIGRATION_KEY;
+        safeStorageSet(key, safeStorageGet(key) || new Date().toISOString());
       }
 
-      document.getElementById("cash-cancel").addEventListener("click", resetKasForm);
-      document.getElementById("cash-form").addEventListener("submit", async event => {
-        event.preventDefault();
-        const id = document.getElementById("cash-id").value;
-        const existing = state.kas.find(item => item.id === id);
-        const amount = Number(document.getElementById("cash-amount").value);
-        if (!Number.isSafeInteger(amount) || amount <= 0) {
-          showNotice("Masukkan nominal kas berupa bilangan rupiah bulat yang lebih besar dari nol.", true);
-          return;
-        }
-        const jenis = document.getElementById("cash-type").value;
-        const now = new Date().toISOString();
-        const record = {
-          id: id || newId(),
-          noUrut: existing ? kasNumber(existing, state.kas.indexOf(existing)) : nextKasNumber(),
-          jenis,
-          nominal: amount,
-          uraian: document.getElementById("cash-description").value.trim(),
-          tglBayar: existing && existing.jenis === jenis && existing.nominal === amount ? existing.tglBayar : now,
-          createdAt: existing ? existing.createdAt : now
-        };
-        const next = { ...state, kas: existing
-          ? state.kas.map(item => item.id === id ? record : item)
-          : [...state.kas, record] };
-        if (!record.uraian) {
-          showNotice("Uraian transaksi wajib diisi.", true);
-          return;
-        }
-        if (await saveState(next)) resetKasForm();
-      });
-
-      function editKas(id) {
-        const item = state.kas.find(record => record.id === id);
-        if (!item) {
-          showNotice("Transaksi kas tidak ditemukan.", true);
-          return;
-        }
-        document.getElementById("cash-id").value = item.id;
-        document.getElementById("cash-sequence").value = kasNumber(item, state.kas.indexOf(item));
-        document.getElementById("cash-type").value = item.jenis;
-        document.getElementById("cash-amount").value = item.nominal;
-        document.getElementById("cash-description").value = item.uraian;
-        document.getElementById("cash-form-title").textContent = "Edit Transaksi Kas";
-        document.getElementById("cash-save").textContent = "Simpan Perubahan";
-        document.getElementById("cash-cancel").hidden = false;
-        openTab("input-kas");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      function nextTalanganNumber() {
-        return state.talangan.reduce((maximum, item, index) =>
-          Math.max(maximum, Number(item.noUrut) || index + 1), 0) + 1;
-      }
-
-      const talanganDescription = document.getElementById("talangan-description");
-      talanganDescription.addEventListener("input", () => {
-        document.getElementById("talangan-date").value = talanganDescription.value.trim()
-          ? new Intl.DateTimeFormat("id-ID", { dateStyle: "full", timeStyle: "medium" }).format(new Date())
-          : "";
-      });
-
-      document.getElementById("talangan-form").addEventListener("submit", async event => {
-        event.preventDefault();
-        const description = talanganDescription.value.trim();
-        const cashInInput = document.getElementById("talangan-in").value;
-        const cashOutInput = document.getElementById("talangan-out").value;
-        const cashIn = Number(cashInInput);
-        const cashOut = Number(cashOutInput);
-        if (!description) {
-          showNotice("Uraian talangan wajib diisi.", true);
-          return;
-        }
-        if (cashInInput === "" || cashOutInput === ""
-          || !Number.isSafeInteger(cashIn) || cashIn < 0
-          || !Number.isSafeInteger(cashOut) || cashOut < 0
-          || (cashIn === 0 && cashOut === 0)) {
-          showNotice("Isi Cash in atau Cash Out dengan nominal rupiah bulat yang lebih besar dari nol.", true);
-          return;
-        }
-        const now = new Date().toISOString();
-        const record = {
-          id: newId(),
-          noUrut: nextTalanganNumber(),
-          uraian: description,
-          cashIn,
-          cashOut,
-          tglTransaksi: now
-        };
-        if (await saveState({ ...state, talangan: [...state.talangan, record] })) {
-          event.currentTarget.reset();
-          document.getElementById("talangan-sequence").value = nextTalanganNumber();
-          document.getElementById("talangan-date").value = "";
-        }
-      });
-
-      function parseCsv(text) {
-        const delimiters = [",", ";", "\t"];
-        const counts = new Map(delimiters.map(delimiter => [delimiter, 0]));
-        let inHeaderQuote = false;
-        for (let i = 0; i < text.length && text[i] !== "\n" && text[i] !== "\r"; i++) {
-          if (text[i] === '"' && text[i + 1] === '"') {
-            i++;
-          } else if (text[i] === '"') {
-            inHeaderQuote = !inHeaderQuote;
-          } else if (!inHeaderQuote && counts.has(text[i])) {
-            counts.set(text[i], counts.get(text[i]) + 1);
-          }
-        }
-        const delimiter = delimiters.reduce((best, candidate) =>
-          counts.get(candidate) > counts.get(best) ? candidate : best, ",");
-        const rows = [];
-        let row = [];
-        let field = "";
-        let quoted = false;
-        for (let i = 0; i < text.length; i++) {
-          const char = text[i];
-          if (quoted) {
-            if (char === '"' && text[i + 1] === '"') {
-              field += '"';
-              i++;
-            } else if (char === '"') {
-              quoted = false;
-            } else {
-              field += char;
-            }
-          } else if (char === '"' && field === "") {
-            quoted = true;
-          } else if (char === delimiter) {
-            row.push(field.trim());
-            field = "";
-          } else if (char === "\n" || char === "\r") {
-            if (char === "\r" && text[i + 1] === "\n") i++;
-            row.push(field.trim());
-            if (row.some(value => value !== "")) rows.push(row);
-            row = [];
-            field = "";
-          } else {
-            field += char;
-          }
-        }
-        if (quoted) throw new Error("Berkas CSV memiliki tanda kutip yang tidak berpasangan.");
-        row.push(field.trim());
-        if (row.some(value => value !== "")) rows.push(row);
-        return rows;
-      }
-
-      const fieldAliases = {
-        noGu: ["no gu", "nomor gu", "no", "nomor gu gup"],
-        noSubgu: ["no subgu", "nomor subgu", "subgu", "nomor sub gu"],
-        subsatker: ["nama subsatker", "subsatker", "nama sub satker"],
-        renbut: ["jumlah renbut", "renbut", "nominal renbut"],
-        ppn: ["ppn", "nominal ppn"],
-        pph21: ["pph21", "pph 21", "pph-21", "nominal pph21"],
-        pph22: ["pph22", "pph 22", "pph-22", "nominal pph22"],
-        pph23: ["pph23", "pph 23", "pph-23", "nominal pph23"],
-        jumlahBersih: ["jumlah bersih", "bersih", "nominal jumlah bersih"],
-        jumlahTerbayar: ["jumlah terbayar", "terbayar", "cash paid"]
-      };
-      const requiredCsvFields = ["noGu", "noSubgu", "subsatker", "renbut", "ppn", "pph21", "pph22", "pph23", "jumlahBersih"];
-      const positionalFields = [...requiredCsvFields, "jumlahTerbayar"];
-
-      function normalizeHeader(value) {
-        return value.replace(/^\uFEFF/, "").toLocaleLowerCase("id").replace(/[^a-z0-9]/g, "");
-      }
-
-      function parseCsvAmount(value, rowNumber, label, optional = false) {
-        const cleaned = value.trim().replace(/^rp\s*/i, "").replace(/[.\s,]/g, "");
-        if (!cleaned && optional) return null;
-        if (!/^\d+$/.test(cleaned)) {
-          throw new Error(`Nominal "${label}" pada baris ${rowNumber} tidak valid.`);
-        }
-        const amount = Number(cleaned);
-        if (!Number.isSafeInteger(amount)) throw new Error(`Nominal "${label}" pada baris ${rowNumber} terlalu besar.`);
-        return amount;
-      }
-
-      function csvRecords(text) {
-        const rows = parseCsv(text);
-        if (!rows.length) throw new Error("Berkas CSV kosong.");
-        const normalizedAliases = Object.fromEntries(Object.entries(fieldAliases).map(([key, aliases]) => [
-          key, aliases.map(normalizeHeader)
-        ]));
-        const header = rows[0].map(normalizeHeader);
-        const hasHeader = Object.values(normalizedAliases).some(aliases => header.some(value => aliases.includes(value)));
-        let records;
-        if (hasHeader) {
-          const indexes = {};
-          Object.entries(normalizedAliases).forEach(([key, aliases]) => {
-            indexes[key] = header.findIndex(value => aliases.includes(value));
-          });
-          const missing = requiredCsvFields.filter(key => indexes[key] < 0);
-          if (missing.length) {
-            const labels = missing.map(key => fieldAliases[key][0]).join(", ");
-            throw new Error(`Kolom wajib tidak ditemukan pada CSV: ${labels}.`);
-          }
-          records = rows.slice(1).map((row, index) => ({ values: Object.fromEntries(
-            Object.entries(indexes).filter(([, column]) => column >= 0).map(([key, column]) => [key, row[column] || ""]),
-          ), rowNumber: index + 2 }));
-        } else {
-          records = rows.map((row, index) => {
-            if (row.length < requiredCsvFields.length) {
-              throw new Error(`Baris ${index + 1} CSV harus memiliki sedikitnya ${requiredCsvFields.length} kolom.`);
-            }
-            return {
-              values: Object.fromEntries(positionalFields.map((key, column) => [key, row[column] || ""])),
-              rowNumber: index + 1
-            };
-          });
-        }
-        return records.map(({ values, rowNumber }) => {
-          const record = {
-            id: newId(),
-            noGu: (values.noGu || "").trim(),
-            noSubgu: (values.noSubgu || "").trim(),
-            subsatker: (values.subsatker || "").trim(),
-            renbut: parseCsvAmount(values.renbut || "", rowNumber, "Jumlah Renbut"),
-            ppn: parseCsvAmount(values.ppn || "", rowNumber, "PPN"),
-            pph21: parseCsvAmount(values.pph21 || "", rowNumber, "PPH21"),
-            pph22: parseCsvAmount(values.pph22 || "", rowNumber, "PPH22"),
-            pph23: parseCsvAmount(values.pph23 || "", rowNumber, "PPH23"),
-            jumlahBersih: parseCsvAmount(values.jumlahBersih || "", rowNumber, "Jumlah Bersih"),
-            jumlahTerbayar: values.jumlahTerbayar === undefined
-              ? null
-              : parseCsvAmount(values.jumlahTerbayar, rowNumber, "Jumlah Terbayar", true),
-            tglBayar: null,
-            createdAt: new Date().toISOString()
-          };
-          if (!record.noGu || !record.noSubgu || !record.subsatker) {
-            throw new Error(`No GU, No SubGU, dan Nama Subsatker wajib diisi pada baris ${rowNumber}.`);
-          }
-          if (record.jumlahTerbayar !== null) record.tglBayar = record.createdAt;
-          return record;
-        });
-      }
-
-      async function importCsv(inputId, target) {
-        const input = document.getElementById(inputId);
-        const feedback = document.getElementById(target === "rekap" ? "gup-import-notice" : "detail-import-notice");
-        const showImportFeedback = (message, isError = false) => {
-          feedback.textContent = message;
-          feedback.classList.toggle("error", isError);
-          feedback.hidden = false;
-        };
-        const file = input.files && input.files[0];
-        if (!file) {
-          const message = "Pilih berkas CSV terlebih dahulu.";
-          showNotice(message, true);
-          showImportFeedback(message, true);
-          return;
-        }
-        try {
-          const records = csvRecords(await file.text());
-          if (!records.length) throw new Error("Berkas CSV tidak berisi baris data.");
-          const next = { ...state, [target]: [...state[target], ...records] };
-          if (await saveState(next)) {
-            input.value = "";
-            const message = `${records.length} baris berhasil diimpor ke ${target === "rekap" ? "Rekap GUP" : "Detail GUP"}.`;
-            showNotice(message);
-            showImportFeedback(message);
-          } else {
-            showImportFeedback(notice.textContent, true);
-          }
-        } catch (error) {
-          const message = `Impor CSV gagal: ${error.message}`;
-          showNotice(message, true);
-          showImportFeedback(message, true);
-        }
-      }
-
-      function renderDashboard() {
-        const { totalBersih, totalTerbayar, belumDibayar } = gupTotals();
-        const statusCounts = { lunas: 0, kurang: 0, lebih: 0, unpaid: 0 };
-        state.rekap.forEach(item => {
-          const status = gupStatus(item);
-          if (status === "LUNAS") statusCounts.lunas++;
-          else if (status === "KURANG BAYAR") statusCounts.kurang++;
-          else if (status === "LEBIH BAYAR") statusCounts.lebih++;
-          else statusCounts.unpaid++;
-        });
-        const summary = isAdmin ? summarize(state) : state.publicSummary;
-        const values = {
-          "dashboard-gup-count": currency.format(state.rekap.length),
-          "dashboard-gup-total": money(totalBersih),
-          "dashboard-paid-total": money(totalTerbayar),
-          "dashboard-unpaid-total": money(belumDibayar),
-          "dashboard-status-lunas": currency.format(statusCounts.lunas),
-          "dashboard-status-kurang": currency.format(statusCounts.kurang),
-          "dashboard-status-lebih": currency.format(statusCounts.lebih),
-          "dashboard-status-unpaid": currency.format(statusCounts.unpaid),
-          "dashboard-cash-count": currency.format(summary.cashCount || 0),
-          "dashboard-cash-in": money(summary.cashIn),
-          "dashboard-cash-out": money(summary.cashOut),
-          "dashboard-cash-balance": money(summary.cashBalance),
-          "dashboard-advance-total": money(summary.advanceTotal),
-          "dashboard-cash-on-hand": money(summary.cashOnHand)
-        };
-        Object.entries(values).forEach(([id, value]) => {
-          document.getElementById(id).textContent = value;
-        });
-      }
-
-      function renderTalangan() {
-        const tbody = document.getElementById("talangan-rows");
-        tbody.replaceChildren();
-        if (!state.talangan.length) {
-          emptyRow(tbody, 6, "Belum ada data piutang atau talangan GUP.");
-          return;
-        }
-        let balance = 0;
-        state.talangan.forEach((item, index) => {
-          const cashIn = Number(item.cashIn) || 0;
-          const cashOut = Number(item.cashOut) || 0;
-          balance = balance + cashIn - cashOut;
-          const row = document.createElement("tr");
-          addCell(row, item.noUrut || index + 1);
-          addCell(row, item.uraian);
-          addCell(row, money(cashIn));
-          addCell(row, money(cashOut));
-          addCell(row, money(balance));
-          addCell(row, formatDate(item.tglTransaksi));
-          tbody.append(row);
-        });
-      }
-
-      document.getElementById("import-gup").addEventListener("click", () => importCsv("gup-csv", "rekap"));
-      document.getElementById("import-detail").addEventListener("click", () => importCsv("detail-csv", "detail"));
-      document.getElementById("gup-search").addEventListener("input", renderGup);
-      document.getElementById("detail-search").addEventListener("input", renderDetail);
-      document.getElementById("cash-search").addEventListener("input", renderKas);
-
-      function evaluateFormula(formula) {
-        formula = formula.replace(/[−]/g, "-").replace(/[×]/g, "*").replace(/[÷]/g, "/");
-        const tokens = [];
-        const tokenPattern = /\s*(\d+(?:\.\d+)?|\.\d+|[()+*/-])\s*/gy;
-        let offset = 0;
-        while (offset < formula.length) {
-          tokenPattern.lastIndex = offset;
-          const match = tokenPattern.exec(formula);
-          if (!match) throw new Error("Formula tidak valid.");
-          tokens.push(match[1]);
-          offset = tokenPattern.lastIndex;
-        }
-        if (!tokens.length) throw new Error("Formula tidak valid.");
-        let position = 0;
-        const peek = () => tokens[position];
-        const consume = () => tokens[position++];
-        const parsePrimary = () => {
-          const token = consume();
-          if (token === "+" || token === "-") {
-            const value = parsePrimary();
-            return token === "-" ? -value : value;
-          }
-          if (token === "(") {
-            const value = parseExpression();
-            if (consume() !== ")") throw new Error("Kurung pada formula belum lengkap.");
-            return value;
-          }
-          if (token === undefined || !/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(token)) {
-            throw new Error("Formula tidak valid.");
-          }
-          return Number(token);
-        };
-        const parseExpression = () => {
-          let value = parsePrimary();
-          while (peek() === "+" || peek() === "-" || peek() === "*" || peek() === "/") {
-            const operator = consume();
-            const next = parsePrimary();
-            if (operator === "/" && next === 0) throw new Error("Pembagian dengan nol tidak dapat dilakukan.");
-            value = operator === "+" ? value + next
-              : operator === "-" ? value - next
-                : operator === "*" ? value * next : value / next;
-          }
-          return value;
-        };
-        const result = parseExpression();
-        if (position !== tokens.length || !Number.isFinite(result)) throw new Error("Formula tidak valid.");
-        return result;
-      }
-
-      document.getElementById("calc-formula").addEventListener("input", event => {
-        const formula = event.currentTarget.value.trim();
-        const result = document.getElementById("calc-result");
-        if (!formula) {
-          result.textContent = "Hasil: —";
-          return;
-        }
-        try {
-          result.textContent = `Hasil: ${calculationFormat.format(evaluateFormula(formula))}`;
-        } catch (error) {
-          result.textContent = error.message;
-        }
-      });
-
-      renderAll();
-      setAccessUi();
-      startSupabase();
+      window.__APP_CONFIG__ = APP_CONFIG;
+      window.__SIKEU__ = { validateGupRecord, readLegacyStateFromBrowser };
     })();
   </script>
 </body>

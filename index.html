@@ -23,12 +23,10 @@
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
     body { margin: 0; background: var(--canvas); color: var(--ink); }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
     .app-shell { min-height: 100vh; }
-
     .ticker {
       overflow: hidden; padding: 8px 0; background: var(--gold); color: var(--green-dark);
       font-size: 13px; font-weight: 750;
@@ -43,29 +41,23 @@
       clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
     @keyframes ticker-scroll { to { transform: translateX(-50%); } }
-
     .topbar { padding: 25px max(24px, calc((100vw - 1440px) / 2)); color: #fff; background: var(--green-dark); }
     .brand { display: flex; align-items: center; gap: 15px; }
     .brand-copy { min-width: 0; }
+    .brand-image { width: 84px; height: 84px; margin-left: auto; flex: 0 0 auto; object-fit: contain; }
     .brand-mark {
       display: grid; width: 48px; height: 48px; place-items: center; flex: 0 0 auto;
       border: 1px solid #ffffff55; border-radius: 15px; color: var(--gold); font-size: 22px; font-weight: 800;
     }
-    .brand-image {
-      width: 84px; height: 84px; margin-left: auto; flex: 0 0 auto; object-fit: contain;
-      loading: lazy; decoding: async;
-    }
     .eyebrow { margin: 0 0 4px; color: #c7d9d3; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(19px, 2.5vw, 27px); line-height: 1.25; }
     .topbar-note { margin: 5px 0 0; color: #d3e1dd; font-size: 13px; }
-
     main { width: min(1440px, 100%); margin: 0 auto; padding: 24px; }
     .notice {
       margin-bottom: 18px; padding: 12px 15px; border: 1px solid #d8e6df; border-radius: 10px;
       background: #edf6f1; color: #32584a; font-size: 13px;
     }
     .notice.error { border-color: #f0c5c5; background: #fff0f0; color: #842828; }
-
     .tabs { display: flex; gap: 7px; overflow-x: auto; padding: 5px; border: 1px solid var(--line); border-radius: 13px; background: #e9efec; }
     .tab-button {
       flex: 1 0 auto; min-height: 43px; padding: 10px 16px; border: 0; border-radius: 9px;
@@ -75,18 +67,16 @@
     .tab-button.active { background: var(--surface); color: var(--green-dark); box-shadow: 0 2px 8px #123c3514; }
     .tab-panel { display: none; padding-top: 20px; }
     .tab-panel.active { display: block; }
-
     .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 17px; }
     h2 { margin: 0; font-size: 21px; }
     h3 { margin: 0 0 13px; font-size: 16px; }
     .subheading { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
     .card { margin-bottom: 17px; padding: 20px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: 0 4px 15px #15382b08; }
-
-    .summary-grid, .dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
     .summary-card { padding: 17px 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
     .summary-label { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
     .summary-value { margin: 0; color: var(--green-dark); font-size: 21px; font-weight: 750; }
-
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
     .search { width: min(360px, 100%); }
     .table-wrap { overflow: auto; max-height: 62vh; border: 1px solid var(--line); border-radius: 9px; }
@@ -96,7 +86,6 @@
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover { background: #f8fbf9; }
     .empty { padding: 27px; color: var(--muted); text-align: center; }
-
     .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 17px; }
     .field { min-width: 0; }
     .field.full { grid-column: 1 / -1; }
@@ -107,7 +96,6 @@
     }
     input:focus, select:focus { border-color: #438775; box-shadow: 0 0 0 3px #43877520; }
     input[readonly] { background: #f2f6f3; color: #51635b; }
-
     .form-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 19px; }
     .button {
       min-height: 39px; padding: 9px 14px; border: 1px solid transparent; border-radius: 8px;
@@ -119,46 +107,27 @@
     .button.small { min-height: 32px; padding: 6px 10px; font-size: 12px; }
     .button:disabled { cursor: not-allowed; opacity: .55; }
     [hidden] { display: none !important; }
-
     .auth-actions { display: flex; gap: 8px; margin-left: auto; }
     dialog { width: min(420px, calc(100% - 28px)); padding: 22px; border: 1px solid var(--line); border-radius: 13px; box-shadow: 0 18px 60px #10211c40; }
     dialog::backdrop { background: #10211c80; }
     dialog h2 { margin-bottom: 16px; }
     dialog .field + .field { margin-top: 13px; }
-
     .status-pill { display: inline-block; padding: 4px 8px; border-radius: 99px; background: #eef1ef; color: #4c5b55; font-size: 11px; font-weight: 750; }
     .status-pill.lunas { background: #e5f4eb; color: #21623c; }
     .status-pill.kurang { background: #fff3d8; color: #835613; }
     .status-pill.lebih { background: #ffebeb; color: #983737; }
-
     .import-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
     .import-row .field { flex: 1 1 280px; }
     .help { margin: 11px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
-
     .calculator { display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, .35fr); align-items: end; gap: 12px; }
-    .calculator-result { min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--green-pale); color: var(--green-dark); font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+    .calculator-result { min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--green-pale); color: var(--green-dark); font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
     .calculator-table { min-width: 720px; }
     .footer { padding: 12px 24px 25px; color: #74817c; font-size: 12px; text-align: center; }
-
-    :focus-visible {
-      outline: 3px solid rgba(67, 135, 117, 0.42);
-      outline-offset: 2px;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .ticker-track { animation: none; }
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
-
     @media (max-width: 680px) {
       main { padding: 16px 12px; }
       .topbar { padding: 20px 16px; }
-      .summary-grid, .dashboard-grid { grid-template-columns: 1fr; gap: 8px; }
+      .summary-grid { grid-template-columns: 1fr; gap: 8px; }
+      .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .summary-card { padding: 13px 15px; }
       .summary-value { font-size: 19px; }
       .field-grid { grid-template-columns: 1fr; }
@@ -178,7 +147,6 @@
       <div class="ticker-group"><span>Polisi Bersama Masyarakat</span></div>
     </div>
   </div>
-
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
@@ -188,26 +156,26 @@
           <h1>Aplikasi Rekapitulasi Pembayaran GUP</h1>
           <p class="topbar-note">Pencatatan GU, detail SubGU, pembayaran, dan kas</p>
         </div>
-        <img class="brand-image" src="Bed-Sikeu.png" alt="Logo Sikeu" loading="lazy" decoding="async">
+        <img class="brand-image" src="Bed-Sikeu.png" alt="Logo Sikeu">
       </div>
     </header>
 
     <main>
-      <div id="notice" class="notice" role="status" aria-live="polite">Siap digunakan.</div>
+      <div id="notice" class="notice" role="status" aria-live="polite">Menghubungkan ke database online…</div>
 
-      <nav class="tabs" aria-label="Menu aplikasi" role="tablist">
-        <button class="tab-button active" id="tab-dashboard" type="button" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="dashboard" tabindex="0">Dashboard</button>
-        <button class="tab-button" id="tab-rekap-gup" type="button" data-tab="rekap-gup" role="tab" aria-selected="false" aria-controls="rekap-gup" tabindex="-1">Rekap GUP</button>
-        <button class="tab-button" id="tab-input-gup" type="button" data-tab="input-gup" data-protected hidden role="tab" aria-selected="false" aria-controls="input-gup" tabindex="-1">Input GUP</button>
-        <button class="tab-button" id="tab-rekap-kas" type="button" data-tab="rekap-kas" data-protected hidden role="tab" aria-selected="false" aria-controls="rekap-kas" tabindex="-1">Rekap Kas GUP</button>
-        <button class="tab-button" id="tab-input-kas" type="button" data-tab="input-kas" data-protected hidden role="tab" aria-selected="false" aria-controls="input-kas" tabindex="-1">Input Kas GUP</button>
+      <nav class="tabs" aria-label="Menu aplikasi">
+        <button class="tab-button active" id="tab-dashboard" type="button" data-tab="dashboard" aria-current="page">Dashboard</button>
+        <button class="tab-button" id="tab-rekap-gup" type="button" data-tab="rekap-gup">Rekap GUP</button>
+        <button class="tab-button" id="tab-input-gup" type="button" data-tab="input-gup" data-protected hidden>Input GUP</button>
+        <button class="tab-button" id="tab-rekap-kas" type="button" data-tab="rekap-kas" data-protected hidden>Rekap Kas GUP</button>
+        <button class="tab-button" id="tab-input-kas" type="button" data-tab="input-kas" data-protected hidden>Input Kas GUP</button>
         <div class="auth-actions">
           <button class="button secondary" id="login-open" type="button">Login Admin</button>
           <button class="button secondary" id="logout-button" type="button" hidden>Keluar</button>
         </div>
       </nav>
 
-      <section class="tab-panel active" id="dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
+      <section class="tab-panel active" id="dashboard" aria-labelledby="tab-dashboard">
         <div class="panel-heading">
           <div>
             <h2>Dashboard</h2>
@@ -218,7 +186,6 @@
             <button class="button secondary" type="button" data-open-tab="rekap-kas" data-admin-only hidden>Lihat Rekap Kas</button>
           </div>
         </div>
-
         <div class="card">
           <h3>Ringkasan GUP</h3>
           <div class="dashboard-grid">
@@ -234,7 +201,6 @@
             <article class="summary-card"><p class="summary-label">Belum dibayar</p><p class="summary-value" id="dashboard-status-unpaid">0</p></article>
           </div>
         </div>
-
         <div class="card">
           <h3>Ringkasan Kas GUP</h3>
           <div class="dashboard-grid">
@@ -248,7 +214,7 @@
         </div>
       </section>
 
-      <section class="tab-panel" id="rekap-gup" role="tabpanel" aria-labelledby="tab-rekap-gup">
+      <section class="tab-panel" id="rekap-gup" aria-labelledby="tab-rekap-gup">
         <div class="panel-heading">
           <div>
             <h2>Rekap GUP</h2>
@@ -263,36 +229,17 @@
           <article class="summary-card"><p class="summary-label">Belum dibayar</p><p class="summary-value" id="gup-unpaid-total">Rp 0</p></article>
         </div>
         <div class="card">
-          <div class="toolbar">
-            <h3>Daftar Rekap GUP</h3>
-            <input class="search" id="gup-search" type="search" placeholder="Cari No GU, SubGU, atau subsatker" aria-label="Cari rekap GUP">
-          </div>
+          <div class="toolbar"><h3>Daftar Rekap GUP</h3><input class="search" id="gup-search" type="search" placeholder="Cari No GU, SubGU, atau subsatker" aria-label="Cari rekap GUP"></div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>No GU</th>
-                  <th>No SubGU</th>
-                  <th>Nama Subsatker</th>
-                  <th>Jumlah Renbut</th>
-                  <th>PPN</th>
-                  <th>PPH21</th>
-                  <th>PPH22</th>
-                  <th>PPH23</th>
-                  <th>Jumlah Bersih</th>
-                  <th>Jumlah Terbayar</th>
-                  <th>Status</th>
-                  <th>tgl. Bayar</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
+              <thead><tr><th>No GU</th><th>No SubGU</th><th>Nama Subsatker</th><th>Jumlah Renbut</th><th>PPN</th><th>PPH21</th><th>PPH22</th><th>PPH23</th><th>Jumlah Bersih</th><th>Jumlah Terbayar</th><th>Tgl. Bayar</th><th>Status</th><th>Selisih</th><th>Aksi</th></tr></thead>
               <tbody id="gup-rows"></tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <section class="tab-panel" id="input-gup" data-admin-only hidden role="tabpanel" aria-labelledby="tab-input-gup">
+      <section class="tab-panel" id="input-gup" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2 id="gup-form-title">Input GUP</h2>
@@ -320,9 +267,39 @@
             </div>
           </form>
         </div>
+
+        <div class="card">
+          <h3>Input Data Kolektif Rekap GU</h3>
+          <div class="import-row">
+            <div class="field"><label for="gup-csv">Pilih berkas CSV</label><input id="gup-csv" type="file" accept=".csv,text/csv"></div>
+            <button class="button secondary" id="import-gup" type="button">Impor Rekap GU</button>
+          </div>
+          <p class="help">Kolom CSV: No GU, No SubGU, Nama Subsatker, Jumlah Renbut, PPN, PPH21, PPH22, PPH23, Jumlah Bersih, dan (opsional) Jumlah Terbayar. Baris pertama boleh berupa judul kolom. Pemisah koma, titik koma, atau tab dideteksi otomatis.</p>
+          <p class="notice import-notice" id="gup-import-notice" role="status" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="card">
+          <h3>Input Data Kolektif Detail GUP</h3>
+          <div class="import-row">
+            <div class="field"><label for="detail-csv">Pilih berkas CSV</label><input id="detail-csv" type="file" accept=".csv,text/csv"></div>
+            <button class="button secondary" id="import-detail" type="button">Impor Detail GUP</button>
+          </div>
+          <p class="help">Kolom CSV sama dengan rekap GU; data akan masuk ke tabel Detail GUP secara terpisah. Pemisah koma, titik koma, atau tab dideteksi otomatis.</p>
+          <p class="notice import-notice" id="detail-import-notice" role="status" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="card">
+          <div class="toolbar"><h3>Detail GUP</h3><input class="search" id="detail-search" type="search" placeholder="Cari No GU, SubGU, atau subsatker" aria-label="Cari detail GUP"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>No GU</th><th>No SubGU</th><th>Nama Subsatker</th><th>Jumlah Renbut</th><th>PPN</th><th>PPH21</th><th>PPH22</th><th>PPH23</th><th>Jumlah Bersih</th></tr></thead>
+              <tbody id="detail-rows"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <section class="tab-panel" id="rekap-kas" data-admin-only hidden role="tabpanel" aria-labelledby="tab-rekap-kas">
+      <section class="tab-panel" id="rekap-kas" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2>Rekap Kas GUP</h2>
@@ -336,31 +313,17 @@
           <article class="summary-card"><p class="summary-label">Saldo kas terakhir</p><p class="summary-value" id="cash-balance">Rp 0</p></article>
         </div>
         <div class="card">
-          <div class="toolbar">
-            <h3>Buku Kas GUP</h3>
-            <input class="search" id="cash-search" type="search" placeholder="Cari uraian atau nomor urut" aria-label="Cari transaksi kas">
-          </div>
+          <div class="toolbar"><h3>Buku Kas GUP</h3><input class="search" id="cash-search" type="search" placeholder="Cari uraian atau nomor urut" aria-label="Cari transaksi kas"></div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>No Urut</th>
-                  <th>Income</th>
-                  <th>Outcome</th>
-                  <th>Cash in</th>
-                  <th>Cash out</th>
-                  <th>Cash Flow</th>
-                  <th>Tgl. Bayar</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
+              <thead><tr><th>No Urut</th><th>Income</th><th>Outcome</th><th>Cash in</th><th>Cash out</th><th>Cash Flow</th><th>Tgl. Bayar</th><th>Aksi</th></tr></thead>
               <tbody id="cash-rows"></tbody>
             </table>
           </div>
         </div>
       </section>
 
-      <section class="tab-panel" id="input-kas" data-admin-only hidden role="tabpanel" aria-labelledby="tab-input-kas">
+      <section class="tab-panel" id="input-kas" data-admin-only hidden>
         <div class="panel-heading">
           <div>
             <h2 id="cash-form-title">Input Kas GUP</h2>
@@ -382,7 +345,6 @@
             </div>
           </form>
         </div>
-
         <div class="card">
           <h3>Kalkulator sederhana</h3>
           <div class="calculator">
@@ -391,9 +353,30 @@
           </div>
           <p class="help" id="calc-help">Gunakan +, −, ×, ÷, dan tanda kurung. Operasi dihitung berurutan dari kiri ke kanan.</p>
         </div>
+        <div class="card">
+          <h3>Input Piutang / Talangan GUP</h3>
+          <form id="talangan-form">
+            <div class="field-grid">
+              <div class="field"><label for="talangan-sequence">No Urut (otomatis)</label><input id="talangan-sequence" type="number" min="1" step="1" readonly aria-readonly="true"></div>
+              <div class="field"><label for="talangan-date">Tgl. Transaksi</label><input id="talangan-date" type="text" readonly aria-readonly="true" placeholder="Terisi otomatis saat uraian diisi"></div>
+              <div class="field full"><label for="talangan-description">Uraian Talangan</label><input id="talangan-description" type="text" required autocomplete="off" placeholder="Masukkan uraian talangan dana"></div>
+              <div class="field"><label for="talangan-in">Cash in (Rp)</label><input id="talangan-in" type="number" min="0" step="1" value="0" required></div>
+              <div class="field"><label for="talangan-out">Cash Out (Rp)</label><input id="talangan-out" type="number" min="0" step="1" value="0" required></div>
+            </div>
+            <div class="form-actions"><button class="button" type="submit">Simpan Talangan</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="toolbar"><h3>Tabel Piutang / Talangan GUP</h3><span class="subheading">Saldo berjalan: saldo sebelumnya + Cash in − Cash Out.</span></div>
+          <div class="table-wrap">
+            <table class="calculator-table">
+              <thead><tr><th>No Urut</th><th>Uraian Talangan</th><th>Cash in</th><th>Cash Out</th><th>Cash Flow</th><th>Tgl. Transaksi</th></tr></thead>
+              <tbody id="talangan-rows"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
-
     <footer class="footer">2026: T 14 N Supriyanto all rights reserved</footer>
   </div>
 
@@ -411,92 +394,283 @@
     </form>
   </dialog>
 
-  <script>
-    const tabButtons = [...document.querySelectorAll('[role="tab"]')];
-    const tabPanels = [...document.querySelectorAll('.tab-panel')];
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    function activateTab(targetId) {
-      tabButtons.forEach((button) => {
-        const isActive = button.dataset.tab === targetId;
-        button.classList.toggle('active', isActive);
-        button.setAttribute('aria-selected', String(isActive));
-        button.tabIndex = isActive ? 0 : -1;
-      });
+    (() => {
+      "use strict";
 
-      tabPanels.forEach((panel) => {
-        const isActive = panel.id === targetId;
-        panel.classList.toggle('active', isActive);
-        panel.hidden = !isActive;
-      });
-    }
+      const APP_CONFIG = Object.assign({
+        supabaseUrl: "https://iwewjkngajvcqssxeffm.supabase.co",
+        supabaseAnonKey: "sb_publishable_7dZjZKBPyigeYaNV_ZkvmQ_GwIXVMI-",
+        adminUsername: "197610312014121001",
+        adminUid: "c92d5eca-952a-45c1-805c-06bf3751c3aa",
+        storageKey: "sikeu-probolinggo-gup-v1"
+      }, window.__APP_CONFIG__ || {});
 
-    tabButtons.forEach((button) => {
-      button.addEventListener('click', () => activateTab(button.dataset.tab));
-      button.addEventListener('keydown', (event) => {
-        const currentIndex = tabButtons.indexOf(button);
-        let nextIndex = currentIndex;
+      const SUPABASE_URL = APP_CONFIG.supabaseUrl;
+      const SUPABASE_ANON_KEY = APP_CONFIG.supabaseAnonKey;
+      const ADMIN_USERNAME = APP_CONFIG.adminUsername;
+      const CONFIGURED_ADMIN_UID = APP_CONFIG.adminUid;
+      const AUTH_EMAIL = `${ADMIN_USERNAME}@${new URL(SUPABASE_URL).hostname}`;
+      const STORAGE_KEY = APP_CONFIG.storageKey;
+      const MIGRATION_KEY = `${STORAGE_KEY}-cloud-migrated`;
+      const COLLECTIONS = ["rekap", "detail", "kas", "talangan"];
+      const currency = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
+      const calculationFormat = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 6 });
+      const money = value => `Rp ${currency.format(Number(value) || 0)}`;
+      const newId = () => globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+        ? globalThis.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const notice = document.getElementById("notice");
+      const state = {
+        rekap: [], detail: [], kas: [], talangan: [],
+        publicSummary: { cashCount: 0, cashIn: 0, cashOut: 0, cashBalance: 0, advanceTotal: 0, cashOnHand: 0 }
+      };
+      const supabaseConfigured = SUPABASE_URL.startsWith("https://")
+        && !SUPABASE_URL.includes("GANTI_PROJECT_REF")
+        && SUPABASE_ANON_KEY
+        && !SUPABASE_ANON_KEY.startsWith("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZXdqa25nYWp2Y3Fzc3hlZmZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTQwMDAsImV4cCI6MjEwNzczM");
+      const supabase = supabaseConfigured
+        ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+      let isAdmin = false;
+      let dataReady = false;
+      let authGeneration = 0;
+      let realtimeChannels = [];
 
-        if (event.key === 'ArrowRight') {
-          nextIndex = (currentIndex + 1) % tabButtons.length;
-        } else if (event.key === 'ArrowLeft') {
-          nextIndex = (currentIndex - 1 + tabButtons.length) % tabButtons.length;
-        } else if (event.key === 'Home') {
-          nextIndex = 0;
-        } else if (event.key === 'End') {
-          nextIndex = tabButtons.length - 1;
-        } else {
-          return;
+      function safeStorageGet(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (error) {
+          console.warn("localStorage unavailable:", error);
+          return null;
+        }
+      }
+
+      function safeStorageSet(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (error) {
+          console.warn("localStorage write failed:", error);
+        }
+      }
+
+      function showNotice(message, isError = false) {
+        notice.textContent = message;
+        notice.classList.toggle("error", isError);
+      }
+
+      function readLegacyState() {
+        const saved = safeStorageGet(STORAGE_KEY);
+        if (saved === null) return { rekap: [], detail: [], kas: [], talangan: [] };
+        const parsed = JSON.parse(saved);
+        if (!parsed || !Array.isArray(parsed.rekap) || !Array.isArray(parsed.detail) || !Array.isArray(parsed.kas)
+          || (parsed.talangan !== undefined && !Array.isArray(parsed.talangan))) {
+          throw new Error("Format data tersimpan tidak sesuai.");
+        }
+        return { rekap: parsed.rekap, detail: parsed.detail, kas: parsed.kas, talangan: parsed.talangan || [] };
+      }
+
+      function summarize(next) {
+        const cashCount = next.kas.length;
+        const cashIn = next.kas.reduce((sum, item) => sum + (item.jenis === "in" ? Number(item.nominal) || 0 : 0), 0);
+        const cashOut = next.kas.reduce((sum, item) => sum + (item.jenis === "out" ? Number(item.nominal) || 0 : 0), 0);
+        const cashBalance = cashIn - cashOut;
+        const advanceTotal = next.talangan.reduce((sum, item) =>
+          sum + (Number(item.cashIn) || 0) - (Number(item.cashOut) || 0), 0);
+        return { cashCount, cashIn, cashOut, cashBalance, advanceTotal, cashOnHand: cashBalance - advanceTotal };
+      }
+
+      function normalizeText(value) {
+        return String(value ?? "").trim();
+      }
+
+      function toNonNegativeInteger(value, label) {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+          throw new Error(`${label} harus berupa angka bulat non-negatif.`);
+        }
+        return parsed;
+      }
+
+      function validateGupRecord(record) {
+        const renbut = Number(record.renbut || 0);
+        const ppn = Number(record.ppn || 0);
+        const pph21 = Number(record.pph21 || 0);
+        const pph22 = Number(record.pph22 || 0);
+        const pph23 = Number(record.pph23 || 0);
+        const expectedBersih = renbut + ppn - pph21 - pph22 - pph23;
+        const bersih = Number(record.jumlahBersih || 0);
+
+        if (bersih !== expectedBersih) {
+          throw new Error("Jumlah bersih tidak sesuai dengan rumus renbut + PPN - PPH21 - PPH22 - PPH23.");
         }
 
+        if (record.noGu && !normalizeText(record.noGu)) {
+          throw new Error("No GU tidak boleh kosong.");
+        }
+
+        if (record.noSubgu && !normalizeText(record.noSubgu)) {
+          throw new Error("No SubGU tidak boleh kosong.");
+        }
+      }
+
+      async function persistCloudState(previous, next) {
+        if (!supabase || !isAdmin) throw new Error("Login admin diperlukan untuk menyimpan data.");
+        const changes = [];
+        COLLECTIONS.forEach(name => {
+          const oldRecords = new Map(previous[name].map(record => [record.id, record]));
+          const newRecords = new Map(next[name].map(record => [record.id, record]));
+          newRecords.forEach((record, id) => {
+            if (JSON.stringify(oldRecords.get(id)) !== JSON.stringify(record)) {
+              changes.push({ collection: name, id, record });
+            }
+          });
+          oldRecords.forEach((record, id) => {
+            if (!newRecords.has(id)) changes.push({ collection: name, id, deleted: true });
+          });
+        });
+        for (const name of COLLECTIONS) {
+          const tableChanges = changes.filter(change => change.collection === name);
+          const upserts = tableChanges.filter(change => !change.deleted).map(change => ({
+            id: change.id,
+            data: change.record
+          }));
+          const deletes = tableChanges.filter(change => change.deleted).map(change => change.id);
+          for (let offset = 0; offset < upserts.length; offset += 450) {
+            const result = await supabase.from(name).upsert(upserts.slice(offset, offset + 450));
+            if (result.error) throw result.error;
+          }
+          for (let offset = 0; offset < deletes.length; offset += 450) {
+            const result = await supabase.from(name).delete().in("id", deletes.slice(offset, offset + 450));
+            if (result.error) throw result.error;
+          }
+        }
+        const summaryResult = await supabase.from("dashboard_summary").upsert({
+          id: "public",
+          data: summarize(next),
+          updated_at: new Date().toISOString()
+        });
+        if (summaryResult.error) {
+          throw summaryResult.error;
+        }
+      }
+
+      async function saveState(next) {
+        if (!dataReady || !isAdmin) {
+          showNotice("Login admin diperlukan untuk menyimpan data.", true);
+          return false;
+        }
+        try {
+          const previous = {
+            rekap: state.rekap, detail: state.detail, kas: state.kas, talangan: state.talangan
+          };
+          await persistCloudState(previous, next);
+        } catch (error) {
+          showNotice(`Data gagal disimpan ke Supabase: ${error.message}`, true);
+          return false;
+        }
+        state.rekap = next.rekap;
+        state.detail = next.detail;
+        state.kas = next.kas;
+        state.talangan = next.talangan;
+        state.publicSummary = summarize(next);
+        renderAll();
+        showNotice("Data berhasil disimpan ke database online.");
+        return true;
+      }
+
+      function numberFromInput(id) {
+        const value = document.getElementById(id).value.trim();
+        const number = Number(value);
+        if (value === "" || !Number.isSafeInteger(number) || number < 0) {
+          throw new Error("Isi semua nominal dengan bilangan rupiah bulat yang tidak negatif.");
+        }
+        return number;
+      }
+
+      function resetGupForm() {
+        document.getElementById("gup-form").reset();
+        document.getElementById("gup-id").value = "";
+        document.getElementById("gup-form-title").textContent = "Input GUP";
+        document.getElementById("gup-save").textContent = "Simpan GUP";
+        document.getElementById("gup-cancel").hidden = true;
+      }
+
+      document.getElementById("gup-cancel").addEventListener("click", resetGupForm);
+      document.getElementById("gup-form").addEventListener("submit", async event => {
         event.preventDefault();
-        const nextButton = tabButtons[nextIndex];
-        nextButton.focus();
-        activateTab(nextButton.dataset.tab);
+        try {
+          const id = document.getElementById("gup-id").value;
+          const existing = state.rekap.find(item => item.id === id);
+          const paidInput = document.getElementById("jumlah-terbayar").value;
+          const paid = paidInput === "" ? null : numberFromInput("jumlah-terbayar");
+          const now = new Date().toISOString();
+          const record = {
+            id: id || newId(),
+            noGu: normalizeText(document.getElementById("no-gu").value),
+            noSubgu: normalizeText(document.getElementById("no-subgu").value),
+            subsatker: normalizeText(document.getElementById("subsatker").value),
+            renbut: toNonNegativeInteger(document.getElementById("renbut").value, "Jumlah renbut"),
+            ppn: toNonNegativeInteger(document.getElementById("ppn").value, "PPN"),
+            pph21: toNonNegativeInteger(document.getElementById("pph21").value, "PPH21"),
+            pph22: toNonNegativeInteger(document.getElementById("pph22").value, "PPH22"),
+            pph23: toNonNegativeInteger(document.getElementById("pph23").value, "PPH23"),
+            jumlahBersih: toNonNegativeInteger(document.getElementById("jumlah-bersih").value, "Jumlah bersih"),
+            jumlahTerbayar: paid,
+            tglBayar: paid === null ? null : existing && existing.jumlahTerbayar === paid
+              ? existing.tglBayar
+              : now,
+            createdAt: existing ? existing.createdAt : now
+          };
+
+          validateGupRecord(record);
+
+          const next = { ...state, rekap: existing
+            ? state.rekap.map(item => item.id === id ? record : item)
+            : [...state.rekap, record] };
+          if (await saveState(next)) resetGupForm();
+        } catch (error) {
+          showNotice(error.message, true);
+        }
       });
-    });
 
-    document.querySelectorAll('[data-open-tab]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const target = button.dataset.openTab;
-        if (target) activateTab(target);
-      });
-    });
-
-    const loginDialog = document.getElementById('login-dialog');
-    const loginUsername = document.getElementById('login-username');
-    document.getElementById('login-open').addEventListener('click', () => {
-      if (typeof loginDialog.showModal === 'function') {
-        loginDialog.showModal();
-      } else {
-        loginDialog.setAttribute('open', 'open');
+      function editGup(id) {
+        const item = state.rekap.find(record => record.id === id);
+        if (!item) {
+          showNotice("Data GUP tidak ditemukan.", true);
+          return;
+        }
+        document.getElementById("gup-id").value = item.id;
+        document.getElementById("no-gu").value = item.noGu;
+        document.getElementById("no-subgu").value = item.noSubgu;
+        document.getElementById("subsatker").value = item.subsatker;
+        document.getElementById("renbut").value = item.renbut;
+        document.getElementById("ppn").value = item.ppn;
+        document.getElementById("pph21").value = item.pph21;
+        document.getElementById("pph22").value = item.pph22;
+        document.getElementById("pph23").value = item.pph23;
+        document.getElementById("jumlah-bersih").value = item.jumlahBersih;
+        document.getElementById("jumlah-terbayar").value = item.jumlahTerbayar ?? "";
+        document.getElementById("gup-form-title").textContent = "Edit Data GUP";
+        document.getElementById("gup-save").textContent = "Perbarui GUP";
+        document.getElementById("gup-cancel").hidden = false;
+        openTab("input-gup");
       }
-      requestAnimationFrame(() => loginUsername.focus());
-    });
 
-    document.getElementById('login-cancel').addEventListener('click', () => {
-      if (typeof loginDialog.close === 'function') {
-        loginDialog.close();
-      } else {
-        loginDialog.removeAttribute('open');
+      function readLegacyStateFromBrowser() {
+        return readLegacyState();
       }
-    });
 
-    const formulaInput = document.getElementById('calc-formula');
-    const resultOutput = document.getElementById('calc-result');
-    function calculateFormula(raw) {
-      const expr = raw.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-      if (!expr.trim()) return 'Hasil: —';
-      try {
-        const value = Function(`"use strict"; return (${expr});`)();
-        if (!Number.isFinite(value)) return 'Hasil: tidak valid';
-        return `Hasil: ${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 6 })}`;
-      } catch {
-        return 'Hasil: format tidak valid';
+      if (localStorage && safeStorageGet(MIGRATION_KEY) !== null) {
+        const key = MIGRATION_KEY;
+        safeStorageSet(key, safeStorageGet(key) || new Date().toISOString());
       }
-    }
-    formulaInput.addEventListener('input', () => {
-      resultOutput.textContent = calculateFormula(formulaInput.value);
-    });
+
+      window.__APP_CONFIG__ = APP_CONFIG;
+      window.__SIKEU__ = { validateGupRecord, readLegacyStateFromBrowser };
+    })();
   </script>
 </body>
 </html>

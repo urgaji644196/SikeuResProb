@@ -11,10 +11,10 @@
       color-scheme: light;
       --ink: #172522;
       --muted: #61716d;
-      --green: #14564a;
-      --green-dark: #103e36;
+      --green: #a0a0a0;
+      --grey-dark: #353535ec;
       --green-pale: #e9f3ef;
-      --gold: #e7b65a;
+      --gold: #f8fc03;
       --line: #dce5e1;
       --surface: #fff;
       --canvas: #f3f6f4;
@@ -28,7 +28,7 @@
     button { cursor: pointer; }
     .app-shell { min-height: 100vh; }
     .ticker {
-      overflow: hidden; padding: 8px 0; background: var(--gold); color: var(--green-dark);
+      overflow: hidden; padding: 8px 0; background: var(--gold); color: var(--grey-dark);
       font-size: 13px; font-weight: 750;
     }
     .ticker-track { display: flex; width: max-content; animation: ticker-scroll 16s linear infinite; }
@@ -41,7 +41,7 @@
       clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
     @keyframes ticker-scroll { to { transform: translateX(-50%); } }
-    .topbar { padding: 25px max(24px, calc((100vw - 1440px) / 2)); color: #fff; background: var(--green-dark); }
+    .topbar { padding: 25px max(24px, calc((100vw - 1440px) / 2)); color: #fff; background: var(--grey-dark); }
     .brand { display: flex; align-items: center; gap: 15px; }
     .brand-copy { min-width: 0; }
     .brand-image { width: 84px; height: 84px; margin-left: auto; flex: 0 0 auto; object-fit: contain; }
@@ -64,7 +64,7 @@
       background: transparent; color: #52625d; font-size: 14px; font-weight: 700;
     }
     .tab-button:hover { color: var(--green); background: #ffffff8a; }
-    .tab-button.active { background: var(--surface); color: var(--green-dark); box-shadow: 0 2px 8px #123c3514; }
+    .tab-button.active { background: var(--surface); color: var(--grey-dark); box-shadow: 0 2px 8px #123c3514; }
     .tab-panel { display: none; padding-top: 20px; }
     .tab-panel.active { display: block; }
     .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 17px; }
@@ -76,7 +76,7 @@
     .dashboard-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
     .summary-card { padding: 17px 19px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
     .summary-label { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
-    .summary-value { margin: 0; color: var(--green-dark); font-size: 21px; font-weight: 750; }
+    .summary-value { margin: 0; color: var(--grey-dark); font-size: 21px; font-weight: 750; }
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
     .search { width: min(360px, 100%); }
     .table-wrap { overflow: auto; max-height: 62vh; border: 1px solid var(--line); border-radius: 9px; }
@@ -101,7 +101,7 @@
       min-height: 39px; padding: 9px 14px; border: 1px solid transparent; border-radius: 8px;
       background: var(--green); color: #fff; font-size: 13px; font-weight: 700;
     }
-    .button:hover { background: var(--green-dark); }
+    .button:hover { background: var(--grey-dark); }
     .button.secondary { border-color: var(--line); background: #fff; color: #33453e; }
     .button.secondary:hover { background: #f3f7f5; }
     .button.small { min-height: 32px; padding: 6px 10px; font-size: 12px; }
@@ -120,7 +120,7 @@
     .import-row .field { flex: 1 1 280px; }
     .help { margin: 11px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
     .calculator { display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, .35fr); align-items: end; gap: 12px; }
-    .calculator-result { min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--green-pale); color: var(--green-dark); font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
+    .calculator-result { min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--green-pale); color: var(--grey-dark); font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
     .calculator-table { min-width: 720px; }
     .footer { padding: 12px 24px 25px; color: #74817c; font-size: 12px; text-align: center; }
     @media (max-width: 680px) {

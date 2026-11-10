@@ -459,6 +459,10 @@
         return { cashCount, cashIn, cashOut, cashBalance, advanceTotal, cashOnHand: cashBalance - advanceTotal };
       }
 
+      function sortByCreatedAt(records) {
+        return records.sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+      }
+
       async function persistCloudState(previous, next) {
         if (!supabase || !isAdmin) throw new Error("Login admin diperlukan untuk menyimpan data.");
         const changes = [];
@@ -527,7 +531,7 @@
       async function loadCollection(name) {
         const result = await supabase.from(name).select("id, data").order("created_at", { ascending: true });
         if (result.error) throw result.error;
-        return result.data.map(row => ({ ...row.data, id: row.id }));
+        return sortByCreatedAt(result.data.map(row => ({ ...row.data, id: row.id })));
       }
 
       async function loadPublicData() {
@@ -537,7 +541,7 @@
         ]);
         if (rekapResult.error) throw rekapResult.error;
         if (summaryResult.error) throw summaryResult.error;
-        state.rekap = rekapResult.data.map(row => ({ ...row.data, id: row.id }));
+        state.rekap = sortByCreatedAt(rekapResult.data.map(row => ({ ...row.data, id: row.id })));
         state.publicSummary = summaryResult.data
           ? { ...state.publicSummary, ...summaryResult.data.data }
           : state.publicSummary;
@@ -583,7 +587,7 @@
                 const record = { ...payload.new.data, id: payload.new.id };
                 if (index >= 0) state[name][index] = record;
                 else state[name].push(record);
-                state[name].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+                sortByCreatedAt(state[name]);
               }
               if (isAdmin) state.publicSummary = summarize(state);
               renderAll();
@@ -1229,7 +1233,9 @@
             };
           });
         }
-        return records.map(({ values, rowNumber }) => {
+        const importStartedAt = Date.now();
+        return records.map(({ values, rowNumber }, index) => {
+          const createdAt = new Date(importStartedAt + index).toISOString();
           const record = {
             id: newId(),
             noGu: (values.noGu || "").trim(),
@@ -1245,7 +1251,7 @@
               ? null
               : parseCsvAmount(values.jumlahTerbayar, rowNumber, "Jumlah Terbayar", true),
             tglBayar: null,
-            createdAt: new Date().toISOString()
+            createdAt
           };
           if (!record.noGu || !record.noSubgu || !record.subsatker) {
             throw new Error(`No GU, No SubGU, dan Nama Subsatker wajib diisi pada baris ${rowNumber}.`);

@@ -179,12 +179,19 @@
         <div class="panel-heading">
           <div>
             <h2>Dashboard</h2>
-            <p class="subheading">Ringkasan pengajuan, pembayaran GUP, dan arus kas berdasarkan seluruh data yang tersimpan.</p>
+            <p class="subheading">Ringkasan pengajuan, pembayaran GUP, dan arus kas; gunakan filter teks untuk melihat ringkasan yang sesuai.</p>
           </div>
           <div class="form-actions" style="margin-top:0">
             <button class="button secondary" type="button" data-open-tab="rekap-gup">Lihat Rekap GUP</button>
             <button class="button secondary" type="button" data-open-tab="rekap-kas" data-admin-only hidden>Lihat Rekap Kas</button>
           </div>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <label for="dashboard-search">Filter ringkasan dashboard</label>
+            <input class="search" id="dashboard-search" type="search" placeholder="Cari No GU, SubGU, subsatker, atau uraian" aria-describedby="dashboard-search-help">
+          </div>
+          <p class="help" id="dashboard-search-help">Ringkasan GUP difilter menurut No GU, No SubGU, atau nama subsatker. Untuk admin, ringkasan kas dan talangan juga difilter menurut nomor urut atau uraian. Ringkasan kas publik tetap menampilkan agregat umum karena rincian transaksi bersifat privat.</p>
         </div>
         <div class="card">
           <h3>Ringkasan GUP</h3>
@@ -1298,18 +1305,45 @@
       }
 
       function renderDashboard() {
-        const { totalBersih, totalTerbayar, belumDibayar } = gupTotals();
+        const query = document.getElementById("dashboard-search").value.trim().toLocaleLowerCase("id");
+        const dashboardRekap = state.rekap.filter(item =>
+          [item.noGu, item.noSubgu, item.subsatker].some(value => String(value || "").toLocaleLowerCase("id").includes(query))
+        );
+        const { totalBersih, totalTerbayar, belumDibayar } = gupTotals(dashboardRekap);
         const statusCounts = { lunas: 0, kurang: 0, lebih: 0, unpaid: 0 };
-        state.rekap.forEach(item => {
+        dashboardRekap.forEach(item => {
           const status = gupStatus(item);
           if (status === "LUNAS") statusCounts.lunas++;
           else if (status === "KURANG BAYAR") statusCounts.kurang++;
           else if (status === "LEBIH BAYAR") statusCounts.lebih++;
           else statusCounts.unpaid++;
         });
-        const summary = isAdmin ? summarize(state) : state.publicSummary;
+        let summary = state.publicSummary;
+        if (isAdmin) {
+          const filteredKas = state.kas.filter((item, index) =>
+            `${kasNumber(item, index)} ${item.uraian || ""}`.toLocaleLowerCase("id").includes(query)
+          );
+          const filteredTalangan = state.talangan.filter((item, index) =>
+            `${item.noUrut || index + 1} ${item.uraian || ""}`.toLocaleLowerCase("id").includes(query)
+          );
+          const cashIn = filteredKas.reduce((sum, item) =>
+            sum + (item.jenis === "in" ? Number(item.nominal) || 0 : 0), 0);
+          const cashOut = filteredKas.reduce((sum, item) =>
+            sum + (item.jenis === "out" ? Number(item.nominal) || 0 : 0), 0);
+          const advanceTotal = filteredTalangan.reduce((sum, item) =>
+            sum + (Number(item.cashIn) || 0) - (Number(item.cashOut) || 0), 0);
+          const cashBalance = cashIn - cashOut;
+          summary = {
+            cashCount: filteredKas.length,
+            cashIn,
+            cashOut,
+            cashBalance,
+            advanceTotal,
+            cashOnHand: cashBalance - advanceTotal
+          };
+        }
         const values = {
-          "dashboard-gup-count": currency.format(state.rekap.length),
+          "dashboard-gup-count": currency.format(dashboardRekap.length),
           "dashboard-gup-total": money(totalBersih),
           "dashboard-paid-total": money(totalTerbayar),
           "dashboard-unpaid-total": money(belumDibayar),
@@ -1357,6 +1391,7 @@
       document.getElementById("gup-search").addEventListener("input", renderGup);
       document.getElementById("detail-search").addEventListener("input", renderDetail);
       document.getElementById("cash-search").addEventListener("input", renderKas);
+      document.getElementById("dashboard-search").addEventListener("input", renderDashboard);
 
       function evaluateFormula(formula) {
         formula = formula.replace(/[−]/g, "-").replace(/[×]/g, "*").replace(/[÷]/g, "/");

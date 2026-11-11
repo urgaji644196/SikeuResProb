@@ -750,9 +750,9 @@
         return terbayar > bersih ? "LEBIH BAYAR" : "KURANG BAYAR";
       }
 
-      function gupTotals() {
-        const totalBersih = state.rekap.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
-        const totalTerbayar = state.rekap.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0);
+      function gupTotals(records = state.rekap) {
+        const totalBersih = records.reduce((sum, item) => sum + Number(item.jumlahBersih || 0), 0);
+        const totalTerbayar = records.reduce((sum, item) => sum + Number(item.jumlahTerbayar || 0), 0);
         return { totalBersih, totalTerbayar, belumDibayar: totalBersih - totalTerbayar };
       }
 
@@ -762,9 +762,9 @@
         const filtered = state.rekap.filter(item =>
           [item.noGu, item.noSubgu, item.subsatker].some(value => String(value || "").toLocaleLowerCase("id").includes(query))
         );
-        const totals = gupTotals();
+        const totals = gupTotals(filtered);
         tbody.replaceChildren();
-        document.getElementById("gup-count").textContent = currency.format(state.rekap.length);
+        document.getElementById("gup-count").textContent = currency.format(filtered.length);
         document.getElementById("gup-total").textContent = money(totals.totalBersih);
         document.getElementById("paid-total").textContent = money(totals.totalTerbayar);
         document.getElementById("gup-unpaid-total").textContent = money(totals.belumDibayar);
@@ -827,25 +827,23 @@
         const tbody = document.getElementById("cash-rows");
         const query = document.getElementById("cash-search").value.trim().toLocaleLowerCase("id");
         let balance = 0;
-        let incoming = 0;
-        let outgoing = 0;
         const rows = state.kas.map((item, index) => {
           const amount = Number(item.nominal) || 0;
           const cashIn = item.jenis === "in" ? amount : 0;
           const cashOut = item.jenis === "out" ? amount : 0;
-          incoming += cashIn;
-          outgoing += cashOut;
           balance += cashIn - cashOut;
           return { item, index, cashIn, cashOut, balance };
         });
         const filtered = rows.filter(({ item, index }) =>
           `${kasNumber(item, index)} ${item.uraian || ""}`.toLocaleLowerCase("id").includes(query)
         );
+        const filteredIncoming = filtered.reduce((sum, row) => sum + row.cashIn, 0);
+        const filteredOutgoing = filtered.reduce((sum, row) => sum + row.cashOut, 0);
         tbody.replaceChildren();
-        document.getElementById("cash-count").textContent = currency.format(state.kas.length);
-        document.getElementById("cash-in-total").textContent = money(incoming);
-        document.getElementById("cash-out-total").textContent = money(outgoing);
-        document.getElementById("cash-balance").textContent = money(balance);
+        document.getElementById("cash-count").textContent = currency.format(filtered.length);
+        document.getElementById("cash-in-total").textContent = money(filteredIncoming);
+        document.getElementById("cash-out-total").textContent = money(filteredOutgoing);
+        document.getElementById("cash-balance").textContent = money(filteredIncoming - filteredOutgoing);
         if (!filtered.length) {
           emptyRow(tbody, 8, state.kas.length ? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi kas.");
           return;

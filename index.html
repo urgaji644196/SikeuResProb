@@ -310,6 +310,7 @@
         <div class="summary-grid">
           <article class="summary-card"><p class="summary-label">Jumlah transaksi</p><p class="summary-value" id="cash-count">0</p></article>
           <article class="summary-card"><p class="summary-label">Total Cash in</p><p class="summary-value" id="cash-in-total">Rp 0</p></article>
+          <article class="summary-card"><p class="summary-label">Total Cash out</p><p class="summary-value" id="cash-out-total">Rp 0</p></article>
           <article class="summary-card"><p class="summary-label">Saldo kas terakhir</p><p class="summary-value" id="cash-balance">Rp 0</p></article>
         </div>
         <div class="card">
@@ -827,11 +828,13 @@
         const query = document.getElementById("cash-search").value.trim().toLocaleLowerCase("id");
         let balance = 0;
         let incoming = 0;
+        let outgoing = 0;
         const rows = state.kas.map((item, index) => {
           const amount = Number(item.nominal) || 0;
           const cashIn = item.jenis === "in" ? amount : 0;
           const cashOut = item.jenis === "out" ? amount : 0;
           incoming += cashIn;
+          outgoing += cashOut;
           balance += cashIn - cashOut;
           return { item, index, cashIn, cashOut, balance };
         });
@@ -841,6 +844,7 @@
         tbody.replaceChildren();
         document.getElementById("cash-count").textContent = currency.format(state.kas.length);
         document.getElementById("cash-in-total").textContent = money(incoming);
+        document.getElementById("cash-out-total").textContent = money(outgoing);
         document.getElementById("cash-balance").textContent = money(balance);
         if (!filtered.length) {
           emptyRow(tbody, 8, state.kas.length ? "Tidak ada transaksi yang cocok dengan pencarian." : "Belum ada transaksi kas.");
